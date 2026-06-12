@@ -44,6 +44,7 @@ export interface RemotePlayerState {
   animFrame: number;
   hitFlash: number;
   speechBubbleTimer: number;
+  level: number;
   atk: number;          // 호스트가 몬스터 피해 계산에 사용
   atkRect: Rect | null; // 공격 중일 때만 존재
 }

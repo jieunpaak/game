@@ -53,6 +53,7 @@ const server = http.createServer((req, res) => {
 const wss         = new WebSocketServer({ server, path: '/ws/chat' });
 const clients     = new Set();
 const clientInfo  = new Map(); // ws → { user, role }
+const guestStates = new Map(); // username → last remote_player state
 
 function broadcast(msg, exclude) {
   const str = typeof msg === 'string' ? msg : JSON.stringify(msg);
@@ -95,6 +96,12 @@ wss.on('connection', ws => {
       if (saves[user]) {
         ws.send(JSON.stringify({ type: 'load_stats', payload: saves[user] }));
       }
+      // 방장 재접속 시 캐시된 게스트 상태 즉시 전송
+      if (role === 'host') {
+        for (const state of guestStates.values()) {
+          ws.send(JSON.stringify({ type: 'remote_player', payload: state }));
+        }
+      }
     } else if (parsed.type === 'save_stats') {
       const info = clientInfo.get(ws);
       if (info) {
@@ -103,16 +110,17 @@ wss.on('connection', ws => {
         writeSaves(saves);
       }
     } else if (parsed.type === 'remote_player') {
-      // 게스트 → 호스트로 중계 (id 태그 붙여서)
+      // 게스트 상태 캐시 + 호스트로 중계
       const info = clientInfo.get(ws);
-      const hostEntry = [...clientInfo.entries()].find(([, v]) => v.role === 'host');
-      if (info && hostEntry) {
-        const [hostWs] = hostEntry;
-        if (hostWs.readyState === 1) {
-          hostWs.send(JSON.stringify({
-            type: 'remote_player',
-            payload: { ...parsed.payload, id: info.user },
-          }));
+      if (info) {
+        const state = { ...parsed.payload, id: info.user };
+        guestStates.set(info.user, state);
+        const hostEntry = [...clientInfo.entries()].find(([, v]) => v.role === 'host');
+        if (hostEntry) {
+          const [hostWs] = hostEntry;
+          if (hostWs.readyState === 1) {
+            hostWs.send(JSON.stringify({ type: 'remote_player', payload: state }));
+          }
         }
       }
     } else if (parsed.type === 'mob_kill') {
@@ -136,6 +144,7 @@ wss.on('connection', ws => {
     const info = clientInfo.get(ws);
     clientInfo.delete(ws);
     if (info) {
+      if (info.role === 'guest') guestStates.delete(info.user);
       broadcast(sysMsg(`${info.user}님이 퇴장했습니다`));
       broadcastUserList();
     }

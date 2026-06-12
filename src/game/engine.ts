@@ -244,7 +244,7 @@ export class GameEngine {
         })),
         cameraX: this.cameraX,
         particles: [],
-        damageNums: [],
+        damageNums: this.damageNums.map(d => ({ ...d })),
         canvasW: this.canvas.width,
         canvasH: this.canvas.height,
         mapId: this.mapId,

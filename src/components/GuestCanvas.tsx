@@ -140,6 +140,7 @@ export function GuestCanvas({ username, onStatsChange, onLevelUp }: Props) {
         animFrame: player.animFrame,
         hitFlash: player.hitFlash,
         speechBubbleTimer: player.speechBubbleTimer,
+        level: player.stats.level,
         atk: player.stats.atk,
         atkRect,
       } satisfies RemotePlayerState);
@@ -197,6 +198,7 @@ export function GuestCanvas({ username, onStatsChange, onLevelUp }: Props) {
           animFrame: hostSnap.player.animFrame,
           hitFlash: hostSnap.player.hitFlash,
           speechBubbleTimer: hostSnap.player.speechBubbleTimer,
+          level: hostSnap.player.stats.level,
           atk: hostSnap.player.stats.atk,
           atkRect: null,
         };
@@ -206,7 +208,7 @@ export function GuestCanvas({ username, onStatsChange, onLevelUp }: Props) {
         render(
           ctx, canvas.width, canvas.height,
           player, renderMonsters, platforms,
-          [], [],
+          hostSnap.damageNums, [],
           cameraX,
           hostSnap.mapId ?? 'dungeon',
           [hostAsRemote, ...otherGuests],

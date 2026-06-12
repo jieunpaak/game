@@ -154,7 +154,7 @@ function drawOtherPlayer(ctx: CanvasRenderingContext2D, rp: RemotePlayerState) {
   ctx.globalAlpha = 1;
 
   // 닉네임 배지
-  const label = rp.id;
+  const label = `${rp.id} Lv.${rp.level}`;
   ctx.font = 'bold 11px sans-serif';
   ctx.textAlign = 'center';
   const tw = ctx.measureText(label).width;
