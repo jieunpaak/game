@@ -31,7 +31,7 @@ function ensureImageLoader() {
   if (document.getElementById('__player_img__')) return;
   const img = document.createElement('img');
   img.id = '__player_img__';
-  img.src = '/player.png';
+  img.src = `${import.meta.env.BASE_URL}player.png`;
   img.style.display = 'none';
   img.onload = () => { processedCanvas = null; }; // 로드 완료 시 캐시 초기화
   document.body.appendChild(img);
