@@ -53,7 +53,7 @@ export function SpectatorCanvas({ onStatsChange }: Props) {
       const playerCenterX = snap.player.x + snap.player.w / 2;
       const localCameraX = Math.max(0, Math.min(WORLD_W - canvas.width, playerCenterX - canvas.width / 2));
 
-      render(ctx, canvas.width, canvas.height, snap.player, monsters, platforms, snap.damageNums, snap.particles, localCameraX);
+      render(ctx, canvas.width, canvas.height, snap.player, monsters, platforms, snap.damageNums, snap.particles, localCameraX, snap.mapId ?? 'dungeon');
     };
 
     loop();

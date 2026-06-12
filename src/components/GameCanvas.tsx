@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { GameEngine } from '../game/engine';
 import type { Player } from '../game/entities';
-import type { GameStateSnapshot } from '../game/types';
+import type { GameStateSnapshot, MapId } from '../game/types';
+import { MAP_IDS, MAP_NAMES } from '../game/map';
 import { wsManager } from '../game/wsManager';
 
 interface Props {
@@ -10,8 +11,15 @@ interface Props {
 }
 
 export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineRef = useRef<GameEngine | null>(null);
+  const canvasRef  = useRef<HTMLCanvasElement>(null);
+  const engineRef  = useRef<GameEngine | null>(null);
+  const [mapId, setMapId] = useState<MapId>('dungeon');
+
+  const switchMap = useCallback(() => {
+    const next = MAP_IDS[(MAP_IDS.indexOf(mapId) + 1) % MAP_IDS.length];
+    setMapId(next);
+    engineRef.current?.setMap(next);
+  }, [mapId]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,9 +48,14 @@ export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ display: 'block', width: '100%', height: '100%' }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        style={{ display: 'block', width: '100%', height: '100%' }}
+      />
+      <button className="map-switch-btn" onClick={switchMap}>
+        {MAP_NAMES[mapId]}
+      </button>
+    </>
   );
 }

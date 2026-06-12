@@ -1,3 +1,5 @@
+export type MapId = 'dungeon' | 'subway';
+
 export interface Rect { x: number; y: number; w: number; h: number; }
 
 export interface Platform extends Rect {
@@ -46,6 +48,7 @@ export interface GameStateSnapshot {
   damageNums: DamageNumber[];
   canvasW: number;
   canvasH: number;
+  mapId: MapId;
 }
 
 export interface GameStats {

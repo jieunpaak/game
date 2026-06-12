@@ -1,5 +1,11 @@
-import type { Platform } from './types';
+import type { Platform, MapId } from './types';
 import { Monster, MONSTER_DEFS } from './entities';
+
+export const MAP_IDS: MapId[] = ['dungeon', 'subway'];
+export const MAP_NAMES: Record<MapId, string> = {
+  dungeon: '🌙 던전',
+  subway: '🚇 지하철',
+};
 
 export const WORLD_W = 3200;
 export const WORLD_H = 640;

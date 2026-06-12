@@ -420,6 +420,33 @@ kbd {
   font-family: inherit;
 }
 
+/* ── Map switch ── */
+.map-switch-btn {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  color: #ddd;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 16px;
+  cursor: pointer;
+  pointer-events: all;
+  z-index: 10;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.map-switch-btn:hover {
+  background: rgba(0,0,0,0.75);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+}
+
 /* ── User list ── */
 .user-list {
   position: absolute;

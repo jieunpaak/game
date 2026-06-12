@@ -1,4 +1,4 @@
-import type { Platform, DamageNumber, Particle, PlayerState, MonsterState } from './types';
+import type { Platform, DamageNumber, Particle, PlayerState, MonsterState, MapId } from './types';
 import { GROUND_Y } from './map';
 import { drawCharacter } from './drawCharacter';
 
@@ -24,19 +24,21 @@ export function render(
   damageNums: DamageNumber[],
   particles: Particle[],
   cameraX: number,
+  mapId: MapId = 'dungeon',
 ) {
   ctx.clearRect(0, 0, cw, ch);
 
-  // Background sky gradient
-  const sky = ctx.createLinearGradient(0, 0, 0, ch);
-  sky.addColorStop(0, '#1a1a2e');
-  sky.addColorStop(0.6, '#16213e');
-  sky.addColorStop(1, '#0f3460');
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, cw, ch);
-
-  // Parallax background trees (decorative)
-  drawBackground(ctx, cw, ch, cameraX);
+  if (mapId === 'subway') {
+    drawSubwayBackground(ctx, cw, ch, cameraX);
+  } else {
+    const sky = ctx.createLinearGradient(0, 0, 0, ch);
+    sky.addColorStop(0, '#1a1a2e');
+    sky.addColorStop(0.6, '#16213e');
+    sky.addColorStop(1, '#0f3460');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, cw, ch);
+    drawDungeonBackground(ctx, cw, ch, cameraX);
+  }
 
   ctx.save();
   ctx.translate(-cameraX, 0);
@@ -44,14 +46,23 @@ export function render(
   // Platforms
   for (const p of platforms) {
     if (p.x + p.w < cameraX || p.x > cameraX + cw) continue;
-    // Top grass/wood layer
-    ctx.fillStyle = p.color ?? '#5d4037';
-    ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = p.y === GROUND_Y ? '#3a7d34' : '#7b5e3d';
-    ctx.fillRect(p.x, p.y, p.w, 6);
-    // Edge shading
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.fillRect(p.x, p.y + p.h - 4, p.w, 4);
+    if (mapId === 'subway') {
+      // Metal/concrete style
+      ctx.fillStyle = p.y === GROUND_Y ? '#9a9890' : '#8a8880';
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.fillStyle = p.y === GROUND_Y ? '#b0adA4' : '#a8a59c';
+      ctx.fillRect(p.x, p.y, p.w, 5);
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(p.x, p.y + p.h - 3, p.w, 3);
+    } else {
+      // Grass/wood style (original)
+      ctx.fillStyle = p.color ?? '#5d4037';
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.fillStyle = p.y === GROUND_Y ? '#3a7d34' : '#7b5e3d';
+      ctx.fillRect(p.x, p.y, p.w, 6);
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.fillRect(p.x, p.y + p.h - 4, p.w, 4);
+    }
   }
 
   // Monsters
@@ -148,14 +159,12 @@ function drawMonster(ctx: CanvasRenderingContext2D, m: MonsterRenderData) {
   ctx.textAlign = 'left';
 }
 
-function drawBackground(ctx: CanvasRenderingContext2D, cw: number, ch: number, cameraX: number) {
-  // Simple moon
+function drawDungeonBackground(ctx: CanvasRenderingContext2D, cw: number, ch: number, cameraX: number) {
   ctx.fillStyle = 'rgba(255,255,200,0.8)';
   ctx.beginPath();
   ctx.arc(cw - 80, 60, 30, 0, Math.PI * 2);
   ctx.fill();
 
-  // Stars
   ctx.fillStyle = 'rgba(255,255,255,0.6)';
   for (let i = 0; i < 30; i++) {
     const sx = ((i * 137 + 50) % cw);
@@ -163,7 +172,6 @@ function drawBackground(ctx: CanvasRenderingContext2D, cw: number, ch: number, c
     ctx.fillRect(sx, sy, 2, 2);
   }
 
-  // Distant mountains (parallax 0.1x)
   ctx.fillStyle = 'rgba(30,40,80,0.8)';
   const ox = cameraX * 0.1;
   for (let i = 0; i < 8; i++) {
@@ -173,5 +181,120 @@ function drawBackground(ctx: CanvasRenderingContext2D, cw: number, ch: number, c
     ctx.lineTo(mx + 200, ch * 0.35);
     ctx.lineTo(mx + 400, ch * 0.75);
     ctx.fill();
+  }
+}
+
+function drawSubwayBackground(ctx: CanvasRenderingContext2D, cw: number, ch: number, cameraX: number) {
+  // ── 벽 (크림 화이트) ──
+  ctx.fillStyle = '#e0ddd5';
+  ctx.fillRect(0, 0, cw, ch);
+
+  // ── 바닥 ──
+  ctx.fillStyle = '#bab8b0';
+  ctx.fillRect(0, GROUND_Y, cw, ch - GROUND_Y);
+  // 타일 줄눈
+  ctx.strokeStyle = '#a8a59c';
+  ctx.lineWidth = 1;
+  const tileW = 64;
+  const tileOff = -(cameraX % tileW);
+  for (let x = tileOff - tileW; x < cw + tileW; x += tileW) {
+    ctx.beginPath(); ctx.moveTo(x, GROUND_Y); ctx.lineTo(x, ch); ctx.stroke();
+  }
+  // 바닥 가로 줄
+  ctx.beginPath(); ctx.moveTo(0, GROUND_Y + 30); ctx.lineTo(cw, GROUND_Y + 30); ctx.stroke();
+
+  // ── 천장 패널 ──
+  ctx.fillStyle = '#d0cec6';
+  ctx.fillRect(0, 0, cw, 52);
+  ctx.fillStyle = '#c0beb6';
+  ctx.fillRect(0, 52, cw, 7);
+
+  // ── 형광등 (parallax 0.98x) ──
+  const lightSpacing = 320;
+  const lightOff = -(cameraX * 0.98 % lightSpacing);
+  for (let lx = lightOff - lightSpacing; lx < cw + lightSpacing; lx += lightSpacing) {
+    ctx.fillStyle = '#b8b5ac';
+    ctx.fillRect(lx + 30, 6, 200, 22);
+    ctx.fillStyle = '#f8f8ec';
+    ctx.fillRect(lx + 35, 9, 190, 14);
+    // 빛 번짐
+    const grd = ctx.createLinearGradient(0, 0, 0, 130);
+    grd.addColorStop(0, 'rgba(255,255,230,0.45)');
+    grd.addColorStop(0.4, 'rgba(255,255,230,0.1)');
+    grd.addColorStop(1, 'rgba(255,255,230,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(lx + 35, 0, 190, 130);
+  }
+
+  // ── 창문 + 광고판 (parallax 0.15x = 터널이 천천히 흘러감) ──
+  const winSpacing = 380;
+  const winOff = -(cameraX * 0.15 % winSpacing);
+  for (let wx = winOff - winSpacing; wx < cw + winSpacing; wx += winSpacing) {
+    // 창문 프레임
+    ctx.fillStyle = '#9a9890';
+    ctx.fillRect(wx + 10, 59, 210, 145);
+    // 유리 (어두운 터널)
+    ctx.fillStyle = '#0d0e1c';
+    ctx.fillRect(wx + 16, 65, 198, 133);
+    // 터널 불빛 줄기
+    for (let i = 0; i < 4; i++) {
+      ctx.strokeStyle = `rgba(100,110,160,${0.06 + i * 0.03})`;
+      ctx.lineWidth = i % 2 === 0 ? 3 : 1.5;
+      ctx.beginPath();
+      ctx.moveTo(wx + 16, 75 + i * 28);
+      ctx.lineTo(wx + 214, 78 + i * 28);
+      ctx.stroke();
+    }
+    // 터널 주황 등불
+    const gOrange = ctx.createRadialGradient(wx + 115, 80, 2, wx + 115, 80, 28);
+    gOrange.addColorStop(0, 'rgba(255,150,30,0.35)');
+    gOrange.addColorStop(1, 'rgba(255,150,30,0)');
+    ctx.fillStyle = gOrange;
+    ctx.fillRect(wx + 87, 62, 56, 50);
+    // 유리 반사
+    const refl = ctx.createLinearGradient(wx + 16, 65, wx + 214, 65);
+    refl.addColorStop(0, 'rgba(255,255,255,0.06)');
+    refl.addColorStop(0.4, 'rgba(255,255,255,0.02)');
+    refl.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = refl;
+    ctx.fillRect(wx + 16, 65, 198, 133);
+
+    // 광고판 (창문 옆)
+    const ax = wx + 240;
+    ctx.fillStyle = '#ece9e0';
+    ctx.fillRect(ax, 63, 110, 141);
+    ctx.fillStyle = '#3a80c8';
+    ctx.fillRect(ax + 6, 69, 98, 45);
+    ctx.fillStyle = '#c8c5bc';
+    ctx.fillRect(ax + 6, 122, 98, 8);
+    ctx.fillRect(ax + 6, 136, 75, 7);
+    ctx.fillRect(ax + 6, 149, 88, 7);
+    ctx.fillRect(ax + 6, 162, 55, 7);
+    ctx.fillStyle = '#b0ada4';
+    ctx.fillRect(ax + 6, 176, 70, 7);
+  }
+
+  // ── 손잡이 가로 봉 ──
+  const railY = 248;
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillRect(0, railY + 18, cw, 4);
+  ctx.fillStyle = '#c8c5bc';
+  ctx.fillRect(0, railY, cw, 3);
+  ctx.fillStyle = '#dcdad2';
+  ctx.fillRect(0, railY + 3, cw, 14);
+  ctx.fillStyle = '#b0ada4';
+  ctx.fillRect(0, railY + 17, cw, 3);
+
+  // ── 세로 기둥 (parallax 1.0x) ──
+  const poleSpacing = 300;
+  const poleOff = -(cameraX % poleSpacing);
+  for (let px = poleOff - poleSpacing; px < cw + poleSpacing; px += poleSpacing) {
+    const cx = px + 55;
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(cx + 14, railY, 5, GROUND_Y - railY);
+    ctx.fillStyle = '#c8c5bc';
+    ctx.fillRect(cx, railY, 14, GROUND_Y - railY);
+    ctx.fillStyle = 'rgba(255,255,255,0.38)';
+    ctx.fillRect(cx + 2, railY, 4, GROUND_Y - railY);
   }
 }

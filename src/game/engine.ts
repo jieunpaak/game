@@ -1,6 +1,6 @@
 import { Player, Monster, MONSTER_DEFS } from './entities';
 import { InputManager } from './input';
-import type { DamageNumber, Particle, GameStateSnapshot } from './types';
+import type { DamageNumber, Particle, GameStateSnapshot, MapId } from './types';
 import { buildPlatforms, buildMonsters, WORLD_W, GROUND_Y } from './map';
 import { render } from './renderer';
 import { rectsOverlap } from './physics';
@@ -26,6 +26,7 @@ export class GameEngine {
   private damageNums: DamageNumber[] = [];
   private particles: Particle[] = [];
   private cameraX = 0;
+  private mapId: MapId = 'dungeon';
   private callbacks: EngineCallbacks;
   private frameCount = 0;
 
@@ -45,6 +46,8 @@ export class GameEngine {
     document.addEventListener('visibilitychange', this.onVisibility);
     this.startForeground();
   }
+
+  setMap(id: MapId) { this.mapId = id; }
 
   stop() {
     this.running = false;
@@ -165,10 +168,11 @@ export class GameEngine {
           hitTimer: m.hitTimer,
         })),
         cameraX: this.cameraX,
-        particles: [],       // 시각 효과만이라 전송 생략
-        damageNums: [],      // 시각 효과만이라 전송 생략
+        particles: [],
+        damageNums: [],
         canvasW: this.canvas.width,
         canvasH: this.canvas.height,
+        mapId: this.mapId,
       });
     }
   }
@@ -183,6 +187,7 @@ export class GameEngine {
       this.damageNums,
       this.particles,
       this.cameraX,
+      this.mapId,
     );
   }
 
