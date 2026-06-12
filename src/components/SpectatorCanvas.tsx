@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { GameStateSnapshot } from '../game/types';
 import type { GameStats } from '../game/types';
 import { MONSTER_DEFS } from '../game/entities';
-import { buildPlatforms } from '../game/map';
+import { buildPlatforms, WORLD_W } from '../game/map';
 import { render } from '../game/renderer';
 import { wsManager } from '../game/wsManager';
 
@@ -49,7 +49,11 @@ export function SpectatorCanvas({ onStatsChange }: Props) {
         def: MONSTER_DEFS[m.defIdx] ?? MONSTER_DEFS[0],
       }));
 
-      render(ctx, canvas.width, canvas.height, snap.player, monsters, platforms, snap.damageNums, snap.particles, snap.cameraX);
+      // 게스트 화면 너비 기준으로 카메라 재계산 (방장과 해상도가 달라도 캐릭터 중앙 유지)
+      const playerCenterX = snap.player.x + snap.player.w / 2;
+      const localCameraX = Math.max(0, Math.min(WORLD_W - canvas.width, playerCenterX - canvas.width / 2));
+
+      render(ctx, canvas.width, canvas.height, snap.player, monsters, platforms, snap.damageNums, snap.particles, localCameraX);
     };
 
     loop();
