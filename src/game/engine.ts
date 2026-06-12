@@ -249,6 +249,7 @@ export class GameEngine {
         canvasH: this.canvas.height,
         mapId: this.mapId,
         autoMode: this.autoMode,
+        hostUsername: this.nickname,
         otherPlayers: [...this.remotePlayers.values()],
       });
     }

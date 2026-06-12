@@ -64,6 +64,7 @@ export interface GameStateSnapshot {
   canvasH: number;
   mapId: MapId;
   autoMode: boolean;
+  hostUsername: string;
   otherPlayers: RemotePlayerState[];
 }
 

@@ -190,7 +190,7 @@ export function GuestCanvas({ username, onStatsChange, onLevelUp }: Props) {
         }));
 
         const hostAsRemote: RemotePlayerState = {
-          id: '방장',
+          id: hostSnap.hostUsername || '방장',
           x: hostSnap.player.x, y: hostSnap.player.y,
           w: hostSnap.player.w, h: hostSnap.player.h,
           facing: hostSnap.player.facing,
