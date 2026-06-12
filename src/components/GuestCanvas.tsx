@@ -82,7 +82,7 @@ export function GuestCanvas({ username, onStatsChange, onLevelUp }: Props) {
     let   cameraX       = 0;
     let   rafId         = 0;
     let   hostSnap: GameStateSnapshot | null = null;
-    let   lastSaveTime  = 0;
+    let   lastSaveTime  = Date.now();
 
     // 솔로 모드용 로컬 몬스터
     const localMonsters = buildMonsters(platforms);
