@@ -49,6 +49,14 @@ export class GameEngine {
 
   setMap(id: MapId) { this.mapId = id; }
 
+  loadStats(stats: import('./types').GameStats) {
+    Object.assign(this.player.stats, stats);
+  }
+
+  getStats(): import('./types').GameStats {
+    return { ...this.player.stats };
+  }
+
   stop() {
     this.running = false;
     document.removeEventListener('visibilitychange', this.onVisibility);

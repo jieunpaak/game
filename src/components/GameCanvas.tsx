@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { GameEngine } from '../game/engine';
 import type { Player } from '../game/entities';
-import type { GameStateSnapshot, MapId } from '../game/types';
+import type { GameStateSnapshot, MapId, GameStats } from '../game/types';
 import { MAP_IDS, MAP_NAMES } from '../game/map';
 import { wsManager } from '../game/wsManager';
+
+const SAVE_INTERVAL_MS = 10_000; // 10초마다 자동 저장
 
 interface Props {
   onStatsChange: (stats: Player['stats']) => void;
@@ -11,8 +13,9 @@ interface Props {
 }
 
 export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
-  const canvasRef  = useRef<HTMLCanvasElement>(null);
-  const engineRef  = useRef<GameEngine | null>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
+  const engineRef    = useRef<GameEngine | null>(null);
+  const lastSaveRef  = useRef<number>(0);
   const [mapId, setMapId] = useState<MapId>('dungeon');
 
   const switchMap = useCallback(() => {
@@ -20,6 +23,14 @@ export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
     setMapId(next);
     engineRef.current?.setMap(next);
   }, [mapId]);
+
+  // load_stats 수신 → 엔진에 적용
+  useEffect(() => {
+    const unsub = wsManager.on<GameStats>('load_stats', stats => {
+      engineRef.current?.loadStats(stats);
+    });
+    return () => { unsub(); };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -29,7 +40,29 @@ export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
       wsManager.send('game_state', snap);
     };
 
-    const engine = new GameEngine(canvas, { onStatsChange, onLevelUp, onGameState });
+    const handleStatsChange = (stats: Player['stats']) => {
+      onStatsChange(stats);
+      // 10초 throttle 자동 저장
+      const now = Date.now();
+      if (now - lastSaveRef.current >= SAVE_INTERVAL_MS) {
+        lastSaveRef.current = now;
+        wsManager.send('save_stats', stats);
+      }
+    };
+
+    const handleLevelUp = () => {
+      onLevelUp();
+      // 레벨업은 즉시 저장
+      const stats = engineRef.current?.getStats();
+      if (stats) wsManager.send('save_stats', stats);
+      lastSaveRef.current = Date.now();
+    };
+
+    const engine = new GameEngine(canvas, {
+      onStatsChange: handleStatsChange,
+      onLevelUp: handleLevelUp,
+      onGameState,
+    });
 
     const resize = () => {
       const rect = canvas.parentElement!.getBoundingClientRect();

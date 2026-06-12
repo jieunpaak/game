@@ -3,8 +3,20 @@ const path = require('path');
 const fs   = require('fs');
 const { WebSocketServer } = require('ws');
 
-const PORT = 3000;
-const DIST = path.resolve(__dirname, '../dist');
+const PORT      = 3000;
+const DIST      = path.resolve(__dirname, '../dist');
+const SAVES_DIR = path.resolve(__dirname, '../data');
+const SAVES_FILE = path.join(SAVES_DIR, 'saves.json');
+
+function loadSaves() {
+  try { return JSON.parse(fs.readFileSync(SAVES_FILE, 'utf8')); }
+  catch { return {}; }
+}
+
+function writeSaves(saves) {
+  fs.mkdirSync(SAVES_DIR, { recursive: true });
+  fs.writeFileSync(SAVES_FILE, JSON.stringify(saves, null, 2));
+}
 
 const MIME = {
   '.html':  'text/html; charset=utf-8',
@@ -78,6 +90,20 @@ wss.on('connection', ws => {
       clientInfo.set(ws, { user, role });
       broadcast(sysMsg(`${user}님이 입장했습니다 👋`));
       broadcastUserList();
+      // 방장이면 저장된 스탯 전송
+      if (role === 'host') {
+        const saves = loadSaves();
+        if (saves[user]) {
+          ws.send(JSON.stringify({ type: 'load_stats', payload: saves[user] }));
+        }
+      }
+    } else if (parsed.type === 'save_stats') {
+      const info = clientInfo.get(ws);
+      if (info && info.role === 'host') {
+        const saves = loadSaves();
+        saves[info.user] = parsed.payload;
+        writeSaves(saves);
+      }
     } else if (parsed.type === 'game_state') {
       broadcast(msg, ws);
     } else {
