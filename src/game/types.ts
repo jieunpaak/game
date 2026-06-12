@@ -35,6 +35,19 @@ export interface MonsterSnapshot {
   hitTimer: number;
 }
 
+// 다른 플레이어(게스트)의 상태 — 호스트가 수신·방송
+export interface RemotePlayerState {
+  id: string;           // username
+  x: number; y: number; w: number; h: number;
+  facing: 1 | -1;
+  state: PlayerState;
+  animFrame: number;
+  hitFlash: number;
+  speechBubbleTimer: number;
+  atk: number;          // 호스트가 몬스터 피해 계산에 사용
+  atkRect: Rect | null; // 공격 중일 때만 존재
+}
+
 export interface GameStateSnapshot {
   player: {
     x: number; y: number; w: number; h: number;
@@ -50,6 +63,7 @@ export interface GameStateSnapshot {
   canvasH: number;
   mapId: MapId;
   autoMode: boolean;
+  otherPlayers: RemotePlayerState[];
 }
 
 export interface GameStats {

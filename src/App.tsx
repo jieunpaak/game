@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { GameCanvas } from './components/GameCanvas';
-import { SpectatorCanvas } from './components/SpectatorCanvas';
+import { GuestCanvas } from './components/GuestCanvas';
 import { HUD } from './components/HUD';
 import { Chat } from './components/Chat';
 import { Login, type Role } from './components/Login';
@@ -68,12 +68,9 @@ function App() {
       <div className="canvas-wrap">
         {role === 'host'
           ? <GameCanvas onStatsChange={handleStatsChange} onLevelUp={handleLevelUp} />
-          : <SpectatorCanvas onStatsChange={handleStatsChange} />
+          : <GuestCanvas username={username} onStatsChange={handleStatsChange} onLevelUp={handleLevelUp} />
         }
         <HUD stats={stats} levelUpFlash={levelUpFlash} />
-        {role === 'guest' && (
-          <div className="spectator-badge">👁 관전 중</div>
-        )}
         <button className="logout-btn" onClick={handleLogout} title="로그아웃">
           {username} ✕
         </button>

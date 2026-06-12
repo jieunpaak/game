@@ -1,4 +1,4 @@
-import type { Platform, DamageNumber, Particle, PlayerState, MonsterState, MapId } from './types';
+import type { Platform, DamageNumber, Particle, PlayerState, MonsterState, MapId, RemotePlayerState } from './types';
 import { GROUND_Y } from './map';
 import { drawCharacter } from './drawCharacter';
 
@@ -25,6 +25,7 @@ export function render(
   particles: Particle[],
   cameraX: number,
   mapId: MapId = 'dungeon',
+  otherPlayers: RemotePlayerState[] = [],
 ) {
   ctx.clearRect(0, 0, cw, ch);
 
@@ -72,7 +73,12 @@ export function render(
     drawMonster(ctx, m);
   }
 
-  // Player
+  // 다른 플레이어 (게스트)
+  for (const rp of otherPlayers) {
+    drawOtherPlayer(ctx, rp);
+  }
+
+  // Player (내 캐릭터)
   drawPlayer(ctx, player);
 
 
@@ -115,6 +121,36 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: PlayerRenderData) {
   ctx.fill();
 
   drawCharacter(ctx, p.x, p.y, p.facing, p.state, p.animFrame, p.hitFlash, p.speechBubbleTimer);
+}
+
+function drawOtherPlayer(ctx: CanvasRenderingContext2D, rp: RemotePlayerState) {
+  // 그림자
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath();
+  ctx.ellipse(rp.x + rp.w / 2, rp.y + rp.h + 2, rp.w / 2, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 캐릭터 (보라빛 오버레이로 구분)
+  drawCharacter(ctx, rp.x, rp.y, rp.facing, rp.state, rp.animFrame, rp.hitFlash, rp.speechBubbleTimer);
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = '#a855f7'; // 보라색 틴트
+  ctx.fillRect(rp.x, rp.y, rp.w, rp.h);
+  ctx.globalAlpha = 1;
+
+  // 닉네임 배지
+  const label = rp.id;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  const tw = ctx.measureText(label).width;
+  const bx = rp.x + rp.w / 2 - tw / 2 - 5;
+  const by = rp.y - 26;
+  ctx.fillStyle = 'rgba(80,20,120,0.75)';
+  ctx.beginPath();
+  ctx.roundRect(bx, by, tw + 10, 16, 4);
+  ctx.fill();
+  ctx.fillStyle = '#e9d5ff';
+  ctx.fillText(label, rp.x + rp.w / 2, by + 12);
+  ctx.textAlign = 'left';
 }
 
 function drawMonster(ctx: CanvasRenderingContext2D, m: MonsterRenderData) {

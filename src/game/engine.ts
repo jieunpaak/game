@@ -1,7 +1,7 @@
 import { Player, Monster, MONSTER_DEFS } from './entities';
 import { InputManager } from './input';
 import type { InputState } from './input';
-import type { DamageNumber, Particle, GameStateSnapshot, MapId } from './types';
+import type { DamageNumber, Particle, GameStateSnapshot, MapId, RemotePlayerState } from './types';
 import { buildPlatforms, buildMonsters, WORLD_W, GROUND_Y } from './map';
 import { render } from './renderer';
 import { rectsOverlap } from './physics';
@@ -11,6 +11,7 @@ export interface EngineCallbacks {
   onStatsChange: (stats: import('./entities').Player['stats']) => void;
   onLevelUp: () => void;
   onGameState?: (snap: GameStateSnapshot) => void;
+  onRemoteKill?: (targetId: string, exp: number, gold: number) => void;
 }
 
 export class GameEngine {
@@ -35,7 +36,9 @@ export class GameEngine {
   private autoStuckTimer = 0;
   private autoLastX = 0;
 
-  // Monster respawn queue
+  // 멀티플레이어: 원격 플레이어 (게스트) 상태
+  private remotePlayers = new Map<string, RemotePlayerState>();
+
   private deadMonsters: Array<{ m: Monster; timer: number }> = [];
 
   constructor(canvas: HTMLCanvasElement, callbacks: EngineCallbacks) {
@@ -71,6 +74,11 @@ export class GameEngine {
     return { ...this.player.stats };
   }
 
+  // 게스트 플레이어 상태 수신 (GameCanvas에서 호출)
+  updateRemotePlayer(state: RemotePlayerState) {
+    this.remotePlayers.set(state.id, state);
+  }
+
   stop() {
     this.running = false;
     document.removeEventListener('visibilitychange', this.onVisibility);
@@ -103,7 +111,6 @@ export class GameEngine {
     this.rafId = requestAnimationFrame(this.rafLoop);
   };
 
-  // ── 자동사냥 AI 입력 계산 ──────────────────────────────────────────────────
   private computeAutoInput(): InputState {
     const alive = this.monsters.filter(m => m.state !== 'dead' && m.hp > 0);
     const p = this.player;
@@ -113,7 +120,6 @@ export class GameEngine {
       jumpPressed: false, attackPressed: false,
     };
 
-    // 막힘 감지: 90프레임마다 위치 변화 확인 → 거의 안 움직였으면 점프로 탈출
     this.autoStuckTimer++;
     let forceJump = false;
     if (this.autoStuckTimer >= 90) {
@@ -127,8 +133,6 @@ export class GameEngine {
     if (alive.length === 0) return empty;
 
     const px = p.x + p.w / 2;
-
-    // 가장 가까운 몬스터 (Y 거리 가중치 2배 → 같은 층 우선)
     const target = alive.reduce((best, m) => {
       const score = (e: Monster) =>
         Math.abs(e.x + e.w / 2 - px) + Math.abs(e.y - p.y) * 2;
@@ -137,8 +141,7 @@ export class GameEngine {
 
     const tx = target.x + target.w / 2;
     const dx = tx - px;
-    const dy = target.y - p.y; // 음수 = 위쪽
-
+    const dy = target.y - p.y;
     const ATTACK_RANGE = 85;
     const inRange = Math.abs(dx) < ATTACK_RANGE && Math.abs(dy) < 80;
 
@@ -160,6 +163,7 @@ export class GameEngine {
     player.update(input, platforms);
     this.callbacks.onStatsChange({ ...player.stats });
 
+    // ── 호스트 플레이어 공격 ──
     for (const m of monsters) {
       m.update(platforms);
       if (m.state === 'dead') continue;
@@ -173,6 +177,21 @@ export class GameEngine {
             const leveled = player.addExp(m.def.exp);
             player.stats.totalKills++;
             if (leveled) this.callbacks.onLevelUp();
+            this.deadMonsters.push({ m, timer: 300 });
+          }
+        }
+      }
+    }
+
+    // ── 원격 플레이어(게스트) 공격 처리 ──
+    for (const [, rp] of this.remotePlayers) {
+      if (!rp.atkRect) continue;
+      for (const m of monsters) {
+        if (m.state === 'dead') continue;
+        if (rectsOverlap(rp.atkRect, { x: m.x, y: m.y, w: m.w, h: m.h })) {
+          m.takeDamage(rp.atk, this.damageNums, this.particles, rp.facing);
+          if (m.hp <= 0) {
+            this.callbacks.onRemoteKill?.(rp.id, m.def.exp, m.def.gold);
             this.deadMonsters.push({ m, timer: 300 });
           }
         }
@@ -228,6 +247,7 @@ export class GameEngine {
         canvasH: this.canvas.height,
         mapId: this.mapId,
         autoMode: this.autoMode,
+        otherPlayers: [...this.remotePlayers.values()],
       });
     }
   }
@@ -243,6 +263,7 @@ export class GameEngine {
       this.particles,
       this.cameraX,
       this.mapId,
+      [...this.remotePlayers.values()],
     );
   }
 

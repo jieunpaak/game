@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { GameEngine } from '../game/engine';
 import type { Player } from '../game/entities';
-import type { GameStateSnapshot, MapId, GameStats } from '../game/types';
+import type { GameStateSnapshot, MapId, GameStats, RemotePlayerState } from '../game/types';
 import { MAP_IDS, MAP_NAMES } from '../game/map';
 import { wsManager } from '../game/wsManager';
 
@@ -38,6 +38,14 @@ export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
     return () => { unsub(); };
   }, []);
 
+  // 게스트 위치 수신 → 엔진에 전달
+  useEffect(() => {
+    const unsub = wsManager.on<RemotePlayerState>('remote_player', state => {
+      engineRef.current?.updateRemotePlayer(state);
+    });
+    return () => { unsub(); };
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -68,6 +76,9 @@ export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
       onStatsChange: handleStatsChange,
       onLevelUp: handleLevelUp,
       onGameState,
+      onRemoteKill: (targetId, exp, gold) => {
+        wsManager.send('mob_kill', { targetId, exp, gold });
+      },
     });
 
     const resize = () => {

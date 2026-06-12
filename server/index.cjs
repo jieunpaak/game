@@ -104,6 +104,28 @@ wss.on('connection', ws => {
         saves[info.user] = parsed.payload;
         writeSaves(saves);
       }
+    } else if (parsed.type === 'remote_player') {
+      // 게스트 → 호스트로 중계 (id 태그 붙여서)
+      const info = clientInfo.get(ws);
+      const hostEntry = [...clientInfo.entries()].find(([, v]) => v.role === 'host');
+      if (info && hostEntry) {
+        const [hostWs] = hostEntry;
+        if (hostWs.readyState === 1) {
+          hostWs.send(JSON.stringify({
+            type: 'remote_player',
+            payload: { ...parsed.payload, id: info.user },
+          }));
+        }
+      }
+    } else if (parsed.type === 'mob_kill') {
+      // 호스트 → 특정 게스트에게 킬 보상 전달
+      const { targetId, exp, gold } = parsed.payload ?? {};
+      for (const [c, info] of clientInfo.entries()) {
+        if (info.user === targetId && c.readyState === 1) {
+          c.send(JSON.stringify({ type: 'mob_kill', payload: { exp, gold } }));
+          break;
+        }
+      }
     } else if (parsed.type === 'game_state') {
       broadcast(msg, ws);
     } else {
