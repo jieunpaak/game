@@ -16,6 +16,7 @@ export class GameEngine {
   private ctx: CanvasRenderingContext2D;
   private input = new InputManager();
   private rafId = 0;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
   private running = false;
 
   private player: Player;
@@ -40,19 +41,22 @@ export class GameEngine {
 
   start() {
     this.running = true;
-    this.loop();
+    // setInterval: 탭이 백그라운드여도 게임 로직 + 브로드캐스트 유지
+    this.intervalId = setInterval(() => { this.update(); }, 1000 / 60);
+    // rAF: 탭이 보일 때만 렌더링 (배터리 절약)
+    this.drawLoop();
   }
 
   stop() {
     this.running = false;
+    if (this.intervalId) clearInterval(this.intervalId);
     cancelAnimationFrame(this.rafId);
   }
 
-  private loop = () => {
+  private drawLoop = () => {
     if (!this.running) return;
-    this.update();
     this.draw();
-    this.rafId = requestAnimationFrame(this.loop);
+    this.rafId = requestAnimationFrame(this.drawLoop);
   };
 
   private update() {
