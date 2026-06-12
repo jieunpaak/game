@@ -49,6 +49,7 @@ export interface GameStateSnapshot {
   canvasW: number;
   canvasH: number;
   mapId: MapId;
+  autoMode: boolean;
 }
 
 export interface GameStats {

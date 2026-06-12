@@ -62,7 +62,7 @@ export function drawCharacter(
   // ── 말풍선 (공격 후 speechBubbleTimer 동안 유지) ──────────
   if (speechBubbleTimer > 0) {
     const alpha = Math.min(1, speechBubbleTimer / 15); // 마지막 15프레임 페이드아웃
-    const text = '비켜 샤갈';
+    const text = '꾸짖을 갈';
     const bx = cx + (facing === 1 ? 18 : -80);
     const by = cy - DISPLAY / 2 - 10;
     const bw = 74, bh = 28, br = 10;

@@ -1,5 +1,6 @@
 import { Player, Monster, MONSTER_DEFS } from './entities';
 import { InputManager } from './input';
+import type { InputState } from './input';
 import type { DamageNumber, Particle, GameStateSnapshot, MapId } from './types';
 import { buildPlatforms, buildMonsters, WORLD_W, GROUND_Y } from './map';
 import { render } from './renderer';
@@ -30,6 +31,10 @@ export class GameEngine {
   private callbacks: EngineCallbacks;
   private frameCount = 0;
 
+  private autoMode = false;
+  private autoStuckTimer = 0;
+  private autoLastX = 0;
+
   // Monster respawn queue
   private deadMonsters: Array<{ m: Monster; timer: number }> = [];
 
@@ -49,6 +54,15 @@ export class GameEngine {
 
   setMap(id: MapId) { this.mapId = id; }
 
+  toggleAuto(): boolean {
+    this.autoMode = !this.autoMode;
+    if (this.autoMode) {
+      this.autoStuckTimer = 0;
+      this.autoLastX = this.player.x;
+    }
+    return this.autoMode;
+  }
+
   loadStats(stats: import('./types').GameStats) {
     Object.assign(this.player.stats, stats);
   }
@@ -65,14 +79,12 @@ export class GameEngine {
     this.worker = null;
   }
 
-  // 화면이 보일 때: rAF (update+draw 한 번에, 60fps 스무스)
   private startForeground() {
     this.worker?.terminate();
     this.worker = null;
     this.rafLoop();
   }
 
-  // 화면이 숨겨질 때: Worker (update만, throttle 없음)
   private startBackground() {
     cancelAnimationFrame(this.rafId);
     this.worker = new TimerWorker();
@@ -80,11 +92,8 @@ export class GameEngine {
   }
 
   private onVisibility = () => {
-    if (document.hidden) {
-      this.startBackground();
-    } else {
-      this.startForeground();
-    }
+    if (document.hidden) this.startBackground();
+    else this.startForeground();
   };
 
   private rafLoop = () => {
@@ -94,23 +103,67 @@ export class GameEngine {
     this.rafId = requestAnimationFrame(this.rafLoop);
   };
 
+  // ── 자동사냥 AI 입력 계산 ──────────────────────────────────────────────────
+  private computeAutoInput(): InputState {
+    const alive = this.monsters.filter(m => m.state !== 'dead' && m.hp > 0);
+    const p = this.player;
+
+    const empty: InputState = {
+      left: false, right: false, jump: false, attack: false,
+      jumpPressed: false, attackPressed: false,
+    };
+
+    // 막힘 감지: 90프레임마다 위치 변화 확인 → 거의 안 움직였으면 점프로 탈출
+    this.autoStuckTimer++;
+    let forceJump = false;
+    if (this.autoStuckTimer >= 90) {
+      if (alive.length > 0 && p.onGround && Math.abs(p.x - this.autoLastX) < 6) {
+        forceJump = true;
+      }
+      this.autoLastX = p.x;
+      this.autoStuckTimer = 0;
+    }
+
+    if (alive.length === 0) return empty;
+
+    const px = p.x + p.w / 2;
+
+    // 가장 가까운 몬스터 (Y 거리 가중치 2배 → 같은 층 우선)
+    const target = alive.reduce((best, m) => {
+      const score = (e: Monster) =>
+        Math.abs(e.x + e.w / 2 - px) + Math.abs(e.y - p.y) * 2;
+      return score(m) < score(best) ? m : best;
+    });
+
+    const tx = target.x + target.w / 2;
+    const dx = tx - px;
+    const dy = target.y - p.y; // 음수 = 위쪽
+
+    const ATTACK_RANGE = 85;
+    const inRange = Math.abs(dx) < ATTACK_RANGE && Math.abs(dy) < 80;
+
+    return {
+      left:          !inRange && dx < -15,
+      right:         !inRange && dx > 15,
+      jump:          false,
+      attack:        false,
+      attackPressed: inRange,
+      jumpPressed:   forceJump || (p.onGround && dy < -50),
+    };
+  }
+
   private update() {
-    const input = this.input.snapshot();
+    const input = this.autoMode ? this.computeAutoInput() : this.input.snapshot();
     const { player, platforms, monsters } = this;
 
-    // Player clamp to world
     player.x = Math.max(0, Math.min(WORLD_W - player.w, player.x));
-
     player.update(input, platforms);
     this.callbacks.onStatsChange({ ...player.stats });
 
-    // Monsters
     for (const m of monsters) {
       m.update(platforms);
-
       if (m.state === 'dead') continue;
 
-      // Player attacks monster
       if (player.isAttacking()) {
         const ar = player.attackRect();
         if (rectsOverlap(ar, { x: m.x, y: m.y, w: m.w, h: m.h })) {
@@ -120,15 +173,12 @@ export class GameEngine {
             const leveled = player.addExp(m.def.exp);
             player.stats.totalKills++;
             if (leveled) this.callbacks.onLevelUp();
-            this.deadMonsters.push({ m, timer: 300 }); // 5s respawn
+            this.deadMonsters.push({ m, timer: 300 });
           }
         }
       }
-
-      // Monster attacks player (disabled)
     }
 
-    // Respawn dead monsters
     for (const entry of this.deadMonsters) {
       entry.timer--;
       if (entry.timer <= 0) {
@@ -139,11 +189,9 @@ export class GameEngine {
     }
     this.deadMonsters = this.deadMonsters.filter(e => e.timer > 0);
 
-    // Update damage numbers
     for (const dn of this.damageNums) dn.life--;
     this.damageNums = this.damageNums.filter(d => d.life > 0);
 
-    // Update particles
     for (const p of this.particles) {
       p.x += p.vx; p.y += p.vy;
       p.vy += 0.2;
@@ -151,13 +199,11 @@ export class GameEngine {
     }
     this.particles = this.particles.filter(p => p.life > 0);
 
-    // Camera: follow player
     const cw = this.canvas.width;
-    const target = player.centerX - cw / 2;
-    this.cameraX += (target - this.cameraX) * 0.1;
+    const camTarget = player.centerX - cw / 2;
+    this.cameraX += (camTarget - this.cameraX) * 0.1;
     this.cameraX = Math.max(0, Math.min(WORLD_W - cw, this.cameraX));
 
-    // Broadcast game state every 3 frames (~20fps)
     this.frameCount++;
     if (this.callbacks.onGameState && this.frameCount % 3 === 0) {
       this.callbacks.onGameState({
@@ -181,6 +227,7 @@ export class GameEngine {
         canvasW: this.canvas.width,
         canvasH: this.canvas.height,
         mapId: this.mapId,
+        autoMode: this.autoMode,
       });
     }
   }

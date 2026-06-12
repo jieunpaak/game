@@ -420,12 +420,19 @@ kbd {
   font-family: inherit;
 }
 
-/* ── Map switch ── */
-.map-switch-btn {
+/* ── Host controls (map + auto) ── */
+.host-controls {
   position: absolute;
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  pointer-events: all;
+  z-index: 10;
+}
+
+.host-btn {
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255,255,255,0.15);
@@ -435,16 +442,43 @@ kbd {
   font-weight: 600;
   padding: 5px 16px;
   cursor: pointer;
-  pointer-events: all;
-  z-index: 10;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
 
-.map-switch-btn:hover {
+.host-btn:hover {
   background: rgba(0,0,0,0.75);
   border-color: rgba(255,255,255,0.3);
   color: #fff;
+}
+
+.host-btn.auto-active {
+  background: rgba(245,200,66,0.15);
+  border-color: rgba(245,200,66,0.55);
+  color: #f5c842;
+  box-shadow: 0 0 12px rgba(245,200,66,0.2);
+}
+
+.auto-badge {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(245,200,66,0.15);
+  border: 1px solid rgba(245,200,66,0.4);
+  border-radius: 20px;
+  color: #f5c842;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 14px;
+  pointer-events: none;
+  z-index: 10;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
 }
 
 /* ── User list ── */

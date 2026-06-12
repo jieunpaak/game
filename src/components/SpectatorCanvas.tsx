@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GameStateSnapshot } from '../game/types';
 import type { GameStats } from '../game/types';
 import { MONSTER_DEFS } from '../game/entities';
@@ -13,6 +13,7 @@ interface Props {
 export function SpectatorCanvas({ onStatsChange }: Props) {
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const snapRef    = useRef<GameStateSnapshot | null>(null);
+  const [autoMode, setAutoMode] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -61,6 +62,7 @@ export function SpectatorCanvas({ onStatsChange }: Props) {
     const unsub = wsManager.on<GameStateSnapshot>('game_state', snap => {
       snapRef.current = snap;
       onStatsChange({ ...snap.player.stats });
+      setAutoMode(snap.autoMode ?? false);
     });
 
     return () => {
@@ -71,9 +73,14 @@ export function SpectatorCanvas({ onStatsChange }: Props) {
   }, [onStatsChange]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ display: 'block', width: '100%', height: '100%' }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        style={{ display: 'block', width: '100%', height: '100%' }}
+      />
+      {autoMode && (
+        <div className="auto-badge">⚔️ 자동사냥 중</div>
+      )}
+    </>
   );
 }

@@ -16,13 +16,19 @@ export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
   const canvasRef    = useRef<HTMLCanvasElement>(null);
   const engineRef    = useRef<GameEngine | null>(null);
   const lastSaveRef  = useRef<number>(0);
-  const [mapId, setMapId] = useState<MapId>('dungeon');
+  const [mapId,    setMapId]    = useState<MapId>('dungeon');
+  const [autoMode, setAutoMode] = useState(false);
 
   const switchMap = useCallback(() => {
     const next = MAP_IDS[(MAP_IDS.indexOf(mapId) + 1) % MAP_IDS.length];
     setMapId(next);
     engineRef.current?.setMap(next);
   }, [mapId]);
+
+  const toggleAuto = useCallback(() => {
+    const next = engineRef.current?.toggleAuto() ?? false;
+    setAutoMode(next);
+  }, []);
 
   // load_stats 수신 → 엔진에 적용
   useEffect(() => {
@@ -86,9 +92,14 @@ export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
         ref={canvasRef}
         style={{ display: 'block', width: '100%', height: '100%' }}
       />
-      <button className="map-switch-btn" onClick={switchMap}>
-        {MAP_NAMES[mapId]}
-      </button>
+      <div className="host-controls">
+        <button className="host-btn" onClick={switchMap}>
+          {MAP_NAMES[mapId]}
+        </button>
+        <button className={`host-btn${autoMode ? ' auto-active' : ''}`} onClick={toggleAuto}>
+          ⚔️ 자동사냥 {autoMode ? 'ON' : 'OFF'}
+        </button>
+      </div>
     </>
   );
 }
