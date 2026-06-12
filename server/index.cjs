@@ -45,8 +45,19 @@ wss.on('connection', ws => {
   clients.add(ws);
   ws.on('message', raw => {
     const msg = raw.toString();
-    for (const c of clients) {
-      if (c.readyState === 1) c.send(msg);
+    let type = '';
+    try { type = JSON.parse(msg).type; } catch { /* ignore */ }
+
+    if (type === 'game_state') {
+      // 방장 → 게스트에게만 전달 (발신자 제외)
+      for (const c of clients) {
+        if (c !== ws && c.readyState === 1) c.send(msg);
+      }
+    } else {
+      // 채팅 등 → 전체 브로드캐스트
+      for (const c of clients) {
+        if (c.readyState === 1) c.send(msg);
+      }
     }
   });
   ws.on('close', () => clients.delete(ws));

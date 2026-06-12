@@ -127,6 +127,129 @@ html, body, #root {
   color: #888;
 }
 
+/* ── Login ── */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: #0d0e17;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.login-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #f5c842;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(245,200,66,0.5);
+}
+
+.login-subtitle {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  margin-top: -6px;
+}
+
+.login-input {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 8px;
+  color: #eee;
+  font-size: 14px;
+  padding: 10px 14px;
+  outline: none;
+  width: 100%;
+}
+
+.login-input:focus { border-color: rgba(245,200,66,0.5); }
+
+.login-error {
+  font-size: 12px;
+  color: #e74c3c;
+  text-align: center;
+}
+
+.login-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.login-btn-guest, .login-btn-host {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.login-btn-guest {
+  background: rgba(255,255,255,0.1);
+  color: #ccc;
+}
+
+.login-btn-host {
+  background: #f5c842;
+  color: #111;
+}
+
+.login-btn-guest:hover, .login-btn-host:hover { opacity: 0.85; }
+
+/* ── Logout button / spectator badge ── */
+.logout-btn {
+  position: absolute;
+  top: 12px;
+  right: 160px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: #999;
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+  pointer-events: all;
+  z-index: 10;
+}
+
+.logout-btn:hover { color: #fff; background: rgba(0,0,0,0.7); }
+
+.spectator-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 99px;
+  color: #888;
+  font-size: 12px;
+  padding: 4px 14px;
+  pointer-events: none;
+  animation: fadein 1s forwards;
+}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ── Chat ── */
 .chat-panel {
   position: absolute;

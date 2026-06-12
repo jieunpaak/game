@@ -1,14 +1,25 @@
-import type { Platform, DamageNumber, Particle } from './types';
-import type { Player } from './entities';
-import type { Monster } from './entities';
+import type { Platform, DamageNumber, Particle, PlayerState, MonsterState } from './types';
 import { GROUND_Y } from './map';
 import { drawCharacter } from './drawCharacter';
+
+export interface PlayerRenderData {
+  x: number; y: number; w: number; h: number;
+  facing: 1 | -1; state: PlayerState; animFrame: number;
+  hitFlash: number; speechBubbleTimer: number;
+}
+
+export interface MonsterRenderData {
+  x: number; y: number; w: number; h: number;
+  state: MonsterState; facing: 1 | -1;
+  hitTimer: number; hp: number; maxHp: number;
+  def: { emoji: string; name: string };
+}
 
 export function render(
   ctx: CanvasRenderingContext2D,
   cw: number, ch: number,
-  player: Player,
-  monsters: Monster[],
+  player: PlayerRenderData,
+  monsters: MonsterRenderData[],
   platforms: Platform[],
   damageNums: DamageNumber[],
   particles: Particle[],
@@ -85,7 +96,7 @@ export function render(
   ctx.textAlign = 'left';
 }
 
-function drawPlayer(ctx: CanvasRenderingContext2D, p: Player) {
+function drawPlayer(ctx: CanvasRenderingContext2D, p: PlayerRenderData) {
   // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath();
@@ -95,7 +106,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: Player) {
   drawCharacter(ctx, p.x, p.y, p.facing, p.state, p.animFrame, p.hitFlash, p.speechBubbleTimer);
 }
 
-function drawMonster(ctx: CanvasRenderingContext2D, m: Monster) {
+function drawMonster(ctx: CanvasRenderingContext2D, m: MonsterRenderData) {
   const flash = m.hitTimer > 0 && Math.floor(m.hitTimer / 2) % 2 === 0;
   if (flash) ctx.globalAlpha = 0.4;
 

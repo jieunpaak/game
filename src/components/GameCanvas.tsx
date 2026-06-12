@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { GameEngine } from '../game/engine';
 import type { Player } from '../game/entities';
+import type { GameStateSnapshot } from '../game/types';
+import { wsManager } from '../game/wsManager';
 
 interface Props {
   onStatsChange: (stats: Player['stats']) => void;
@@ -15,7 +17,11 @@ export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const engine = new GameEngine(canvas, { onStatsChange, onLevelUp });
+    const onGameState = (snap: GameStateSnapshot) => {
+      wsManager.send('game_state', snap);
+    };
+
+    const engine = new GameEngine(canvas, { onStatsChange, onLevelUp, onGameState });
 
     const resize = () => {
       const rect = canvas.parentElement!.getBoundingClientRect();

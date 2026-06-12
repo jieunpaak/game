@@ -1,6 +1,6 @@
-import { Player, Monster } from './entities';
+import { Player, Monster, MONSTER_DEFS } from './entities';
 import { InputManager } from './input';
-import type { DamageNumber, Particle } from './types';
+import type { DamageNumber, Particle, GameStateSnapshot } from './types';
 import { buildPlatforms, buildMonsters, WORLD_W, GROUND_Y } from './map';
 import { render } from './renderer';
 import { rectsOverlap } from './physics';
@@ -8,6 +8,7 @@ import { rectsOverlap } from './physics';
 export interface EngineCallbacks {
   onStatsChange: (stats: import('./entities').Player['stats']) => void;
   onLevelUp: () => void;
+  onGameState?: (snap: GameStateSnapshot) => void;
 }
 
 export class GameEngine {
@@ -24,6 +25,7 @@ export class GameEngine {
   private particles: Particle[] = [];
   private cameraX = 0;
   private callbacks: EngineCallbacks;
+  private frameCount = 0;
 
   // Monster respawn queue
   private deadMonsters: Array<{ m: Monster; timer: number }> = [];
@@ -115,6 +117,32 @@ export class GameEngine {
     const target = player.centerX - cw / 2;
     this.cameraX += (target - this.cameraX) * 0.1;
     this.cameraX = Math.max(0, Math.min(WORLD_W - cw, this.cameraX));
+
+    // Broadcast game state every 3 frames (~20fps)
+    this.frameCount++;
+    if (this.callbacks.onGameState && this.frameCount % 3 === 0) {
+      this.callbacks.onGameState({
+        player: {
+          x: player.x, y: player.y, w: player.w, h: player.h,
+          facing: player.facing, state: player.state,
+          animFrame: player.animFrame, hitFlash: player.hitFlash,
+          speechBubbleTimer: player.speechBubbleTimer,
+          stats: { ...player.stats },
+        },
+        monsters: this.monsters.map(m => ({
+          x: m.x, y: m.y, w: m.w, h: m.h,
+          facing: m.facing, state: m.state,
+          hp: m.hp, maxHp: m.maxHp,
+          defIdx: MONSTER_DEFS.indexOf(m.def),
+          hitTimer: m.hitTimer,
+        })),
+        cameraX: this.cameraX,
+        particles: this.particles.map(p => ({ ...p })),
+        damageNums: this.damageNums.map(d => ({ ...d })),
+        canvasW: this.canvas.width,
+        canvasH: this.canvas.height,
+      });
+    }
   }
 
   private draw() {
