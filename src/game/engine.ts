@@ -42,24 +42,45 @@ export class GameEngine {
 
   start() {
     this.running = true;
-    // Worker: 백그라운드에서도 throttle 없이 60fps 유지
-    this.worker = new TimerWorker();
-    this.worker.onmessage = () => { if (this.running) this.update(); };
-    // rAF: 탭이 보일 때만 렌더링
-    this.drawLoop();
+    document.addEventListener('visibilitychange', this.onVisibility);
+    this.startForeground();
   }
 
   stop() {
     this.running = false;
+    document.removeEventListener('visibilitychange', this.onVisibility);
+    cancelAnimationFrame(this.rafId);
     this.worker?.terminate();
     this.worker = null;
-    cancelAnimationFrame(this.rafId);
   }
 
-  private drawLoop = () => {
+  // 화면이 보일 때: rAF (update+draw 한 번에, 60fps 스무스)
+  private startForeground() {
+    this.worker?.terminate();
+    this.worker = null;
+    this.rafLoop();
+  }
+
+  // 화면이 숨겨질 때: Worker (update만, throttle 없음)
+  private startBackground() {
+    cancelAnimationFrame(this.rafId);
+    this.worker = new TimerWorker();
+    this.worker.onmessage = () => { if (this.running) this.update(); };
+  }
+
+  private onVisibility = () => {
+    if (document.hidden) {
+      this.startBackground();
+    } else {
+      this.startForeground();
+    }
+  };
+
+  private rafLoop = () => {
     if (!this.running) return;
+    this.update();
     this.draw();
-    this.rafId = requestAnimationFrame(this.drawLoop);
+    this.rafId = requestAnimationFrame(this.rafLoop);
   };
 
   private update() {
