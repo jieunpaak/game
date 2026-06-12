@@ -26,6 +26,17 @@ function App() {
 
   useEffect(() => { wsManager.connect(); }, []);
 
+  // 로그인 상태일 때 WS가 열리면 join 전송 (재연결 포함)
+  useEffect(() => {
+    if (!role || !username) return;
+    const sendJoin = (s: string) => {
+      if (s === 'open') wsManager.send('join', { user: username });
+    };
+    const unsub = wsManager.onConnState(sendJoin);
+    if (wsManager.connState === 'open') wsManager.send('join', { user: username });
+    return () => { unsub(); };
+  }, [role, username]);
+
   const handleLogin = useCallback((name: string, r: Role) => {
     localStorage.setItem(STORAGE_USERNAME, name);
     localStorage.setItem(STORAGE_ROLE, r);
@@ -34,9 +45,10 @@ function App() {
   }, []);
 
   const handleLogout = useCallback(() => {
+    wsManager.send('leave', { user: username });
     localStorage.removeItem(STORAGE_ROLE);
     setRole(null);
-  }, []);
+  }, [username]);
 
   const handleStatsChange = useCallback((s: Player['stats']) => setStats(s), []);
 

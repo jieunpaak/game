@@ -38,29 +38,55 @@ const server = http.createServer((req, res) => {
   });
 });
 
-const wss     = new WebSocketServer({ server, path: '/ws/chat' });
-const clients = new Set();
+const wss         = new WebSocketServer({ server, path: '/ws/chat' });
+const clients     = new Set();
+const clientNames = new Map(); // ws → username
+
+function broadcast(msg, exclude) {
+  const str = typeof msg === 'string' ? msg : JSON.stringify(msg);
+  for (const c of clients) {
+    if (c !== exclude && c.readyState === 1) c.send(str);
+  }
+}
+
+function sysMsg(text) {
+  return {
+    type: 'chat',
+    payload: {
+      id:     Math.random().toString(36).slice(2),
+      user:   'SYSTEM',
+      text,
+      ts:     Date.now(),
+      system: true,
+    },
+  };
+}
 
 wss.on('connection', ws => {
   clients.add(ws);
+
   ws.on('message', raw => {
     const msg = raw.toString();
-    let type = '';
-    try { type = JSON.parse(msg).type; } catch { /* ignore */ }
+    let parsed = {};
+    try { parsed = JSON.parse(msg); } catch { /* ignore */ }
 
-    if (type === 'game_state') {
-      // 방장 → 게스트에게만 전달 (발신자 제외)
-      for (const c of clients) {
-        if (c !== ws && c.readyState === 1) c.send(msg);
-      }
+    if (parsed.type === 'join') {
+      const user = parsed.payload?.user ?? '알 수 없음';
+      clientNames.set(ws, user);
+      broadcast(sysMsg(`${user}님이 입장했습니다 👋`));
+    } else if (parsed.type === 'game_state') {
+      broadcast(msg, ws); // 발신자 제외
     } else {
-      // 채팅 등 → 전체 브로드캐스트
-      for (const c of clients) {
-        if (c.readyState === 1) c.send(msg);
-      }
+      broadcast(msg);     // 채팅 등 전체
     }
   });
-  ws.on('close', () => clients.delete(ws));
+
+  ws.on('close', () => {
+    clients.delete(ws);
+    const user = clientNames.get(ws);
+    clientNames.delete(ws);
+    if (user) broadcast(sysMsg(`${user}님이 퇴장했습니다`));
+  });
 });
 
 server.listen(PORT, () => console.log(`Game server on :${PORT}`));

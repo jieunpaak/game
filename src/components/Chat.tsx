@@ -6,6 +6,7 @@ interface ChatMessage {
   user: string;
   text: string;
   ts: number;
+  system?: boolean;
 }
 
 interface Props {
@@ -74,13 +75,17 @@ export function Chat({ username }: Props) {
         <>
           <div className="chat-messages" ref={listRef}>
             {messages.length === 0 && <div className="chat-empty">아직 메시지가 없어요</div>}
-            {messages.map(m => (
-              <div key={m.id} className={`chat-msg ${m.user === username ? 'chat-msg-me' : ''}`}>
-                <span className="chat-msg-user">{m.user}</span>
-                <span className="chat-msg-text">{m.text}</span>
-                <span className="chat-msg-time">{formatTime(m.ts)}</span>
-              </div>
-            ))}
+            {messages.map(m =>
+              m.system ? (
+                <div key={m.id} className="chat-msg-system">{m.text}</div>
+              ) : (
+                <div key={m.id} className={`chat-msg ${m.user === username ? 'chat-msg-me' : ''}`}>
+                  <span className="chat-msg-user">{m.user}</span>
+                  <span className="chat-msg-text">{m.text}</span>
+                  <span className="chat-msg-time">{formatTime(m.ts)}</span>
+                </div>
+              )
+            )}
           </div>
           <div className="chat-input-row">
             <input
