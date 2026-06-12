@@ -205,7 +205,7 @@ export class GameEngine {
     this.cameraX = Math.max(0, Math.min(WORLD_W - cw, this.cameraX));
 
     this.frameCount++;
-    if (this.callbacks.onGameState && this.frameCount % 3 === 0) {
+    if (this.callbacks.onGameState) {
       this.callbacks.onGameState({
         player: {
           x: player.x, y: player.y, w: player.w, h: player.h,

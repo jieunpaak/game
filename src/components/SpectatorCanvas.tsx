@@ -21,6 +21,7 @@ export function SpectatorCanvas({ onStatsChange }: Props) {
     const ctx = canvas.getContext('2d')!;
     const platforms = buildPlatforms();
     let rafId = 0;
+    let cameraX = 0;
 
     const resize = () => {
       const rect = canvas.parentElement!.getBoundingClientRect();
@@ -50,11 +51,12 @@ export function SpectatorCanvas({ onStatsChange }: Props) {
         def: MONSTER_DEFS[m.defIdx] ?? MONSTER_DEFS[0],
       }));
 
-      // 게스트 화면 너비 기준으로 카메라 재계산 (방장과 해상도가 달라도 캐릭터 중앙 유지)
+      // 카메라: 방장과 동일한 lerp로 부드럽게 추적
       const playerCenterX = snap.player.x + snap.player.w / 2;
-      const localCameraX = Math.max(0, Math.min(WORLD_W - canvas.width, playerCenterX - canvas.width / 2));
+      const targetCameraX = Math.max(0, Math.min(WORLD_W - canvas.width, playerCenterX - canvas.width / 2));
+      cameraX += (targetCameraX - cameraX) * 0.1;
 
-      render(ctx, canvas.width, canvas.height, snap.player, monsters, platforms, snap.damageNums, snap.particles, localCameraX, snap.mapId ?? 'dungeon');
+      render(ctx, canvas.width, canvas.height, snap.player, monsters, platforms, snap.damageNums, snap.particles, cameraX, snap.mapId ?? 'dungeon');
     };
 
     loop();
