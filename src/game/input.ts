@@ -13,12 +13,18 @@ export class InputManager {
 
   constructor() {
     window.addEventListener('keydown', e => {
+      const tag = (document.activeElement as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (['ArrowLeft','ArrowRight','ArrowUp','Space','KeyZ','KeyA','KeyD','KeyW'].includes(e.code)) {
         e.preventDefault();
       }
       this.keys.add(e.code);
     });
-    window.addEventListener('keyup', e => this.keys.delete(e.code));
+    window.addEventListener('keyup', e => {
+      const tag = (document.activeElement as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      this.keys.delete(e.code);
+    });
   }
 
   private pressed(code: string) { return this.keys.has(code); }

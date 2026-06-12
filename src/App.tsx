@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { GameCanvas } from './components/GameCanvas';
 import { HUD } from './components/HUD';
+import { Chat } from './components/Chat';
 import type { Player } from './game/entities';
 
 const INITIAL_STATS: Player['stats'] = {
@@ -30,6 +31,7 @@ function App() {
       <div className="canvas-wrap">
         <GameCanvas onStatsChange={handleStatsChange} onLevelUp={handleLevelUp} />
         <HUD stats={stats} levelUpFlash={levelUpFlash} />
+        <Chat />
       </div>
     </div>
   );
