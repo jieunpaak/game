@@ -37,7 +37,7 @@ function App() {
       setUsername('');
       setJoinError(message);
     });
-    return () => unsub();
+    return () => { unsub(); };
   }, []);
 
   // 로그인 상태일 때 WS가 열리면 join 전송 (재연결 포함)
