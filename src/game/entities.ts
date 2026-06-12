@@ -4,7 +4,7 @@ import type { InputState } from './input';
 
 const GRAVITY    = 0.6;
 const JUMP_FORCE = -14;
-const MOVE_SPEED = 4;
+const MOVE_SPEED = 7;
 const ATK_DURATION   = 16; // frames
 const ATK_COOLDOWN   = 24;
 const INVINCIBLE_DUR = 45;
