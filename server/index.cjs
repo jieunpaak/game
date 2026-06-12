@@ -88,6 +88,13 @@ wss.on('connection', ws => {
     if (parsed.type === 'join') {
       const user = parsed.payload?.user ?? '알 수 없음';
       const role = parsed.payload?.role ?? 'guest';
+      // 중복 닉네임 차단
+      const duplicate = [...clientInfo.values()].some(info => info.user === user);
+      if (duplicate) {
+        ws.send(JSON.stringify({ type: 'join_error', payload: { message: '이미 접속 중인 닉네임이에요' } }));
+        ws.close();
+        return;
+      }
       clientInfo.set(ws, { user, role });
       broadcast(sysMsg(`${user}님이 입장했습니다 👋`));
       broadcastUserList();

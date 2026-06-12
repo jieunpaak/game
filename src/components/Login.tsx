@@ -5,13 +5,14 @@ export type Role = 'host' | 'guest';
 
 interface Props {
   onLogin: (username: string, role: Role) => void;
+  initialError?: string;
 }
 
-export function Login({ onLogin }: Props) {
+export function Login({ onLogin, initialError }: Props) {
   const [name,     setName]     = useState('');
   const [password, setPassword] = useState('');
   const [showPw,   setShowPw]   = useState(false);
-  const [error,    setError]    = useState('');
+  const [error,    setError]    = useState(initialError ?? '');
 
   const enter = (asHost: boolean) => {
     const trimmed = name.trim();

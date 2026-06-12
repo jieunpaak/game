@@ -24,9 +24,21 @@ function App() {
   const [role,     setRole]     = useState<Role | null>(() => (storage.getItem(STORAGE_ROLE) as Role) ?? null);
   const [stats,       setStats]       = useState<Player['stats']>(INITIAL_STATS);
   const [levelUpFlash, setLevelUpFlash] = useState(false);
+  const [joinError,    setJoinError]   = useState('');
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { wsManager.connect(); }, []);
+
+  useEffect(() => {
+    const unsub = wsManager.on<{ message: string }>('join_error', ({ message }) => {
+      storage.removeItem(STORAGE_ROLE);
+      storage.removeItem(STORAGE_USERNAME);
+      setRole(null);
+      setUsername('');
+      setJoinError(message);
+    });
+    return () => unsub();
+  }, []);
 
   // 로그인 상태일 때 WS가 열리면 join 전송 (재연결 포함)
   useEffect(() => {
@@ -61,7 +73,7 @@ function App() {
   }, []);
 
   if (!role) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} initialError={joinError} />;
   }
 
   return (
