@@ -53,15 +53,6 @@ export function render(
   // Player
   drawPlayer(ctx, player);
 
-  // Attack effect
-  if (player.isAttacking()) {
-    const ar = player.attackRect();
-    ctx.fillStyle = 'rgba(255, 220, 50, 0.25)';
-    ctx.fillRect(ar.x, ar.y, ar.w, ar.h);
-    ctx.strokeStyle = 'rgba(255, 200, 0, 0.6)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(ar.x, ar.y, ar.w, ar.h);
-  }
 
   // Particles
   for (const p of particles) {

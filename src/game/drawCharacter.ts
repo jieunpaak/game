@@ -58,6 +58,54 @@ export function drawCharacter(
   const cx = px + 18;
   const cy = py + 48 - DISPLAY / 2; // 이미지 바닥 = 히트박스 바닥
 
+  // ── 말풍선 ────────────────────────────────────────────────
+  if (state === 'attack') {
+    const p    = (t % 20) / 20;
+    const alpha = Math.max(0, 1 - p * 1.4);
+    const text  = '비켜 샤갈';
+    const bx    = cx + (facing === 1 ? 18 : -80);
+    const by    = cy - DISPLAY / 2 - 10;
+    const bw    = 74, bh = 28, br = 10;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // 말풍선 배경
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.roundRect(bx, by - bh, bw, bh, br);
+    ctx.fill();
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // 꼬리 (삼각형)
+    const tailX = facing === 1 ? bx + 16 : bx + bw - 16;
+    ctx.beginPath();
+    ctx.moveTo(tailX - 6, by);
+    ctx.lineTo(tailX + 6, by);
+    ctx.lineTo(tailX,     by + 10);
+    ctx.closePath();
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(tailX - 6, by);
+    ctx.lineTo(tailX,     by + 10);
+    ctx.lineTo(tailX + 6, by);
+    ctx.stroke();
+
+    // 텍스트
+    ctx.fillStyle = '#111';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, bx + bw / 2, by - bh / 2);
+
+    ctx.restore();
+  }
+
   // ── 공격 이펙트 (캐릭터보다 먼저 그려서 뒤에 깔림) ─────────
   if (state === 'attack') {
     const p = (t % 20) / 20; // 0→1 주기
