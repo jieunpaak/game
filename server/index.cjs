@@ -90,16 +90,14 @@ wss.on('connection', ws => {
       clientInfo.set(ws, { user, role });
       broadcast(sysMsg(`${user}님이 입장했습니다 👋`));
       broadcastUserList();
-      // 방장이면 저장된 스탯 전송
-      if (role === 'host') {
-        const saves = loadSaves();
-        if (saves[user]) {
-          ws.send(JSON.stringify({ type: 'load_stats', payload: saves[user] }));
-        }
+      // 모든 유저에게 저장된 스탯 전송
+      const saves = loadSaves();
+      if (saves[user]) {
+        ws.send(JSON.stringify({ type: 'load_stats', payload: saves[user] }));
       }
     } else if (parsed.type === 'save_stats') {
       const info = clientInfo.get(ws);
-      if (info && info.role === 'host') {
+      if (info) {
         const saves = loadSaves();
         saves[info.user] = parsed.payload;
         writeSaves(saves);

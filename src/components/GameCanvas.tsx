@@ -15,7 +15,7 @@ interface Props {
 export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
   const canvasRef    = useRef<HTMLCanvasElement>(null);
   const engineRef    = useRef<GameEngine | null>(null);
-  const lastSaveRef  = useRef<number>(0);
+  const lastSaveRef  = useRef<number>(Date.now());
   const [mapId,    setMapId]    = useState<MapId>('dungeon');
   const [autoMode, setAutoMode] = useState(false);
 

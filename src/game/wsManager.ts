@@ -9,8 +9,9 @@ class WsManager {
 
   connect() {
     if (this.ws && this.ws.readyState < 2) return;
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${proto}//${location.host}/ws/chat`);
+    const url = import.meta.env.VITE_WS_URL
+      ?? `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/chat`;
+    const ws = new WebSocket(url);
     this.ws = ws;
     this.setConn('connecting');
 
