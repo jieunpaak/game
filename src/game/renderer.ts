@@ -2,6 +2,7 @@ import type { Platform, DamageNumber, Particle } from './types';
 import type { Player } from './entities';
 import type { Monster } from './entities';
 import { GROUND_Y } from './map';
+import { drawCharacter } from './drawCharacter';
 
 export function render(
   ctx: CanvasRenderingContext2D,
@@ -94,35 +95,13 @@ export function render(
 }
 
 function drawPlayer(ctx: CanvasRenderingContext2D, p: Player) {
-  const flash = p.hitFlash > 0 && Math.floor(p.hitFlash / 2) % 2 === 0;
-  if (flash) ctx.globalAlpha = 0.3;
-
-  ctx.save();
-  if (p.facing === -1) {
-    ctx.translate(p.x + p.w / 2, 0);
-    ctx.scale(-1, 1);
-    ctx.translate(-(p.x + p.w / 2), 0);
-  }
-
   // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath();
-  ctx.ellipse(p.x + p.w / 2, p.y + p.h + 2, p.w / 2, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(p.x + p.w / 2, p.y + p.h + 2, p.w / 2, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Body
-  ctx.font = `${p.h}px serif`;
-  ctx.textBaseline = 'top';
-  ctx.fillText(p.isAttacking() ? '🧙' : '🧙', p.x, p.y - 4);
-
-  // Attack slash
-  if (p.isAttacking()) {
-    ctx.font = '32px serif';
-    ctx.fillText('⚔️', p.x + p.w - 4, p.y + 4);
-  }
-
-  ctx.restore();
-  ctx.globalAlpha = 1;
+  drawCharacter(ctx, p.x, p.y, p.facing, p.state, p.animFrame, p.hitFlash);
 }
 
 function drawMonster(ctx: CanvasRenderingContext2D, m: Monster) {

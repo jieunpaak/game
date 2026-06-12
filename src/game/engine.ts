@@ -84,13 +84,7 @@ export class GameEngine {
         }
       }
 
-      // Monster attacks player
-      if (rectsOverlap(
-        { x: player.x, y: player.y, w: player.w, h: player.h },
-        { x: m.x,      y: m.y,      w: m.w,      h: m.h },
-      )) {
-        player.takeDamage(m.def.atk, this.damageNums, this.particles);
-      }
+      // Monster attacks player (disabled)
     }
 
     // Respawn dead monsters

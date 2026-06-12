@@ -21,6 +21,7 @@ export class Player {
   atkCooldown = 0;
   invincible = 0;
   hitFlash = 0;
+  animFrame = 0;
 
   stats: GameStats;
 
@@ -38,7 +39,7 @@ export class Player {
   get centerY() { return this.y + this.h / 2; }
 
   attackRect() {
-    const reach = 56;
+    const reach = 90;
     return this.facing === 1
       ? { x: this.x + this.w, y: this.y + 8, w: reach, h: this.h - 16 }
       : { x: this.x - reach, y: this.y + 8, w: reach, h: this.h - 16 };
@@ -72,6 +73,7 @@ export class Player {
   }
 
   update(input: InputState, platforms: Platform[]) {
+    this.animFrame++;
     if (this.atkCooldown > 0) this.atkCooldown--;
     if (this.atkTimer > 0)    this.atkTimer--;
     if (this.invincible > 0)  this.invincible--;

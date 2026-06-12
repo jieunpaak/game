@@ -1,40 +1,67 @@
 # ⚔️ 던전 크롤러
 
-React + TypeScript로 만든 방치형 RPG 게임입니다. 영웅이 자동으로 던전을 탐험하며 몬스터를 처치하고 성장합니다.
+메이플스토리 스타일 2D 사이드스크롤 액션 RPG.  
+Canvas 기반으로 구현된 플랫포머로, 몬스터를 처치하며 레벨업하는 게임입니다.
 
-## 게임 플레이
+## 플레이 방법
 
-- 전투는 1초마다 자동으로 진행됩니다.
-- 몬스터를 처치하면 골드와 경험치를 획득합니다.
-- 경험치가 쌓이면 레벨업하며 스탯이 증가합니다.
-- 골드로 상점에서 장비를 업그레이드할 수 있습니다.
-- 10마리를 처치하면 다음 층으로 진입하며 몬스터가 강해집니다.
-- 영웅이 쓰러지면 골드 10%를 잃고 부활합니다.
+| 키 | 동작 |
+|----|------|
+| `←` `→` | 좌우 이동 |
+| `↑` / `Space` | 점프 |
+| `Z` | 공격 |
 
-## 기능
+- 몬스터를 처치하면 골드와 경험치 획득
+- 경험치가 쌓이면 레벨업 → 공격력·방어력·HP 증가
+- 처치된 몬스터는 5초 후 리스폰
+- 세계 너비 3200px, 3개 구역에 걸쳐 난이도 상승
 
-| 패널 | 내용 |
-|------|------|
-| 영웅 | HP · EXP · 층 진행도 · 공격력 · 방어력 · 골드 · 총 처치수 |
-| 던전 | 현재 층 · 몬스터 정보 · 일시정지 · 후퇴 |
-| 상점 | 검 / 방패 / 갑옷 / 공격속도 업그레이드 |
-| 전투 로그 | 실시간 전투 기록 |
-
-## 실행
+## 로컬 개발
 
 ```bash
 npm install
-npm run dev
+npm run dev       # http://localhost:5173
 ```
 
-## 빌드
+## 배포
+
+정적 파일 빌드 후 serve + ngrok으로 공개 URL 제공.
 
 ```bash
-npm run build
+npm run build     # dist/ 갱신
 ```
+
+> 코드 수정 시 `npm run build`만 실행하면 즉시 반영됩니다.  
+> serve와 ngrok은 재시작 불필요.
+
+### 서비스 관리 (launchd)
+
+로그인 시 자동 시작되는 두 개의 서비스가 등록되어 있습니다.
+
+| 서비스 | 역할 |
+|--------|------|
+| `com.jerry.game-serve` | `dist/` 폴더를 포트 3000으로 서빙 |
+| `com.jerry.game-ngrok` | 포트 3000을 인터넷에 공개 (ngrok 터널) |
+
+```bash
+# 상태 확인
+launchctl list | grep com.jerry.game
+
+# 재시작
+launchctl unload ~/Library/LaunchAgents/com.jerry.game-serve.plist
+launchctl load   ~/Library/LaunchAgents/com.jerry.game-serve.plist
+
+# 현재 공개 URL 확인
+curl -s http://localhost:4040/api/tunnels | python3 -c \
+  "import sys,json; print(json.load(sys.stdin)['tunnels'][0]['public_url'])"
+```
+
+> ngrok 무료 플랜은 맥북 재시작 시 URL이 변경됩니다.
 
 ## 기술 스택
 
 - React 19 + TypeScript
 - Vite
-- CSS (no external UI library)
+- HTML5 Canvas (렌더링, 물리, 게임 루프)
+- serve + ngrok (배포)
+- launchd (자동 실행)
