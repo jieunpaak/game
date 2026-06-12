@@ -129,7 +129,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: PlayerRenderData, label?: 
   ctx.textAlign = 'center';
   const tw = ctx.measureText(text).width;
   const bx = p.x + p.w / 2 - tw / 2 - 5;
-  const by = p.y - 26;
+  const by = p.y + p.h + 8; // 아바타 하단으로 이동
   ctx.fillStyle = 'rgba(20,80,40,0.8)';
   ctx.beginPath();
   ctx.roundRect(bx, by, tw + 10, 16, 4);
@@ -159,7 +159,7 @@ function drawOtherPlayer(ctx: CanvasRenderingContext2D, rp: RemotePlayerState) {
   ctx.textAlign = 'center';
   const tw = ctx.measureText(label).width;
   const bx = rp.x + rp.w / 2 - tw / 2 - 5;
-  const by = rp.y - 26;
+  const by = rp.y + rp.h + 8; // 아바타 하단으로 이동
   ctx.fillStyle = 'rgba(80,20,120,0.75)';
   ctx.beginPath();
   ctx.roundRect(bx, by, tw + 10, 16, 4);
