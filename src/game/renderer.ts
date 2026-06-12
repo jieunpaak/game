@@ -121,7 +121,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: PlayerRenderData, label?: 
   ctx.ellipse(p.x + p.w / 2, p.y + p.h + 2, p.w / 2, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  drawCharacter(ctx, p.x, p.y, p.facing, p.state, p.animFrame, p.hitFlash, p.speechBubbleTimer);
+  drawCharacter(ctx, p.x, p.y, p.facing, p.state, p.animFrame, p.hitFlash, p.speechBubbleTimer, label?.nickname);
 
   if (!label) return;
   const text = `${label.nickname} Lv.${label.level}`;
@@ -147,7 +147,7 @@ function drawOtherPlayer(ctx: CanvasRenderingContext2D, rp: RemotePlayerState) {
   ctx.fill();
 
   // 캐릭터 (보라빛 오버레이로 구분)
-  drawCharacter(ctx, rp.x, rp.y, rp.facing, rp.state, rp.animFrame, rp.hitFlash, rp.speechBubbleTimer);
+  drawCharacter(ctx, rp.x, rp.y, rp.facing, rp.state, rp.animFrame, rp.hitFlash, rp.speechBubbleTimer, rp.id);
   ctx.globalAlpha = 0.25;
   ctx.fillStyle = '#a855f7'; // 보라색 틴트
   ctx.fillRect(rp.x, rp.y, rp.w, rp.h);

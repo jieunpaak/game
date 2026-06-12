@@ -1,13 +1,23 @@
 import type { PlayerState } from './types';
 
 // 흰 배경 제거 후 offscreen canvas에 캐싱
-let processedCanvas: HTMLCanvasElement | null = null;
+const processedCanvases = new Map<string, HTMLCanvasElement>();
 
-function getProcessedImage(): HTMLCanvasElement | null {
-  if (processedCanvas) return processedCanvas;
+function getImagePath(nickname?: string): string {
+  if (nickname === '진영킹') return 'jin.png';
+  return 'player.png';
+}
 
-  const img = document.getElementById('__player_img__') as HTMLImageElement | null;
-  if (!img || !img.complete || img.naturalWidth === 0) return null;
+function getProcessedImage(nickname?: string): HTMLCanvasElement | null {
+  const path = getImagePath(nickname);
+  if (processedCanvases.has(path)) return processedCanvases.get(path)!;
+
+  const imgId = `__img_${path.replace('.', '_')}__`;
+  const img = document.getElementById(imgId) as HTMLImageElement | null;
+  if (!img || !img.complete || img.naturalWidth === 0) {
+    ensureImageLoader(path);
+    return null;
+  }
 
   const c = document.createElement('canvas');
   c.width = img.naturalWidth;
@@ -22,22 +32,27 @@ function getProcessedImage(): HTMLCanvasElement | null {
     if (r > 230 && g > 230 && b > 230) data[i + 3] = 0;
   }
   cx.putImageData(id, 0, 0);
-  processedCanvas = c;
+  processedCanvases.set(path, c);
   return c;
 }
 
 // DOM에 숨겨진 img 태그로 이미지 로드
-function ensureImageLoader() {
-  if (document.getElementById('__player_img__')) return;
+function ensureImageLoader(path: string) {
+  const imgId = `__img_${path.replace('.', '_')}__`;
+  if (document.getElementById(imgId)) return;
   const img = document.createElement('img');
-  img.id = '__player_img__';
-  img.src = `${import.meta.env.BASE_URL}player.png`;
+  img.id = imgId;
+  img.src = `${import.meta.env.BASE_URL}${path}`;
   img.style.display = 'none';
-  img.onload = () => { processedCanvas = null; }; // 로드 완료 시 캐시 초기화
+  img.onload = () => { 
+    processedCanvases.delete(path); // 로드 완료 시 캐시 강제 갱신 유도
+  }; 
   document.body.appendChild(img);
 }
 
-ensureImageLoader();
+// 기본 이미지들 미리 로드 시도
+ensureImageLoader('player.png');
+ensureImageLoader('jin.png');
 
 export function drawCharacter(
   ctx: CanvasRenderingContext2D,
@@ -48,8 +63,9 @@ export function drawCharacter(
   animFrame: number,
   hitFlash: number,
   speechBubbleTimer: number,
+  nickname?: string,
 ) {
-  const source = getProcessedImage();
+  const source = getProcessedImage(nickname);
   if (!source) return;
 
   if (hitFlash > 0 && Math.floor(hitFlash / 2) % 2 === 1) ctx.globalAlpha = 0.3;
