@@ -4,6 +4,7 @@ import type { DamageNumber, Particle, GameStateSnapshot } from './types';
 import { buildPlatforms, buildMonsters, WORLD_W, GROUND_Y } from './map';
 import { render } from './renderer';
 import { rectsOverlap } from './physics';
+import TimerWorker from './timerWorker?worker';
 
 export interface EngineCallbacks {
   onStatsChange: (stats: import('./entities').Player['stats']) => void;
@@ -16,7 +17,7 @@ export class GameEngine {
   private ctx: CanvasRenderingContext2D;
   private input = new InputManager();
   private rafId = 0;
-  private intervalId: ReturnType<typeof setInterval> | null = null;
+  private worker: InstanceType<typeof TimerWorker> | null = null;
   private running = false;
 
   private player: Player;
@@ -41,15 +42,17 @@ export class GameEngine {
 
   start() {
     this.running = true;
-    // setInterval: 탭이 백그라운드여도 게임 로직 + 브로드캐스트 유지
-    this.intervalId = setInterval(() => { this.update(); }, 1000 / 60);
-    // rAF: 탭이 보일 때만 렌더링 (배터리 절약)
+    // Worker: 백그라운드에서도 throttle 없이 60fps 유지
+    this.worker = new TimerWorker();
+    this.worker.onmessage = () => { if (this.running) this.update(); };
+    // rAF: 탭이 보일 때만 렌더링
     this.drawLoop();
   }
 
   stop() {
     this.running = false;
-    if (this.intervalId) clearInterval(this.intervalId);
+    this.worker?.terminate();
+    this.worker = null;
     cancelAnimationFrame(this.rafId);
   }
 
