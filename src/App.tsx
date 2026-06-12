@@ -10,6 +10,7 @@ import { wsManager } from './game/wsManager';
 
 const STORAGE_USERNAME = 'chat_username';
 const STORAGE_ROLE     = 'chat_role';
+const storage = sessionStorage;
 
 const INITIAL_STATS: Player['stats'] = {
   level: 1, exp: 0, expToNext: 20,
@@ -19,8 +20,8 @@ const INITIAL_STATS: Player['stats'] = {
 };
 
 function App() {
-  const [username, setUsername] = useState(() => localStorage.getItem(STORAGE_USERNAME) ?? '');
-  const [role,     setRole]     = useState<Role | null>(() => (localStorage.getItem(STORAGE_ROLE) as Role) ?? null);
+  const [username, setUsername] = useState(() => storage.getItem(STORAGE_USERNAME) ?? '');
+  const [role,     setRole]     = useState<Role | null>(() => (storage.getItem(STORAGE_ROLE) as Role) ?? null);
   const [stats,       setStats]       = useState<Player['stats']>(INITIAL_STATS);
   const [levelUpFlash, setLevelUpFlash] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,15 +40,15 @@ function App() {
   }, [role, username]);
 
   const handleLogin = useCallback((name: string, r: Role) => {
-    localStorage.setItem(STORAGE_USERNAME, name);
-    localStorage.setItem(STORAGE_ROLE, r);
+    storage.setItem(STORAGE_USERNAME, name);
+    storage.setItem(STORAGE_ROLE, r);
     setUsername(name);
     setRole(r);
   }, []);
 
   const handleLogout = useCallback(() => {
     wsManager.send('leave', { user: username });
-    localStorage.removeItem(STORAGE_ROLE);
+    storage.removeItem(STORAGE_ROLE);
     setRole(null);
   }, [username]);
 
