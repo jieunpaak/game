@@ -419,3 +419,77 @@ kbd {
   color: #ccc;
   font-family: inherit;
 }
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  /* 채팅 패널: 전체 너비, 화면 하단에 고정 */
+  .chat-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 10px 10px 0 0;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    border-right: 1px solid rgba(255,255,255,0.1);
+    border-bottom: none;
+    /* 홈바(safe-area) 여백 */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .chat-header {
+    border-radius: 10px 10px 0 0;
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .chat-messages {
+    height: 180px;
+  }
+
+  /* iOS 자동 줌 방지 (font-size < 16px 이면 포커스 시 줌인) */
+  .chat-input-row input {
+    font-size: 16px;
+    padding: 12px 12px;
+  }
+
+  .chat-input-row button {
+    font-size: 15px;
+    padding: 0 18px;
+    min-width: 64px;
+    min-height: 44px;
+  }
+
+  /* 로그인 카드 */
+  .login-card {
+    width: calc(100% - 32px);
+    padding: 32px 20px;
+    border-radius: 16px;
+  }
+
+  .login-input {
+    font-size: 16px; /* iOS 줌 방지 */
+    padding: 12px 14px;
+  }
+
+  .login-btn-guest, .login-btn-host {
+    padding: 13px 0;
+    font-size: 14px;
+  }
+
+  /* 로그아웃 버튼 위치 조정 */
+  .logout-btn {
+    right: 12px;
+    top: 12px;
+  }
+
+  /* 관전 배지: 상단으로 이동 (채팅에 가리지 않도록) */
+  .spectator-badge {
+    top: 60px;
+    transform: translate(-50%, 0);
+  }
+
+  /* HUD 컨트롤 설명 숨김 (모바일에선 키보드 없음) */
+  .hud-controls { display: none; }
+}
