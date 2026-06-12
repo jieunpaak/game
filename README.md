@@ -23,45 +23,83 @@ npm install
 npm run dev       # http://localhost:5173
 ```
 
-## 배포
+## 배포 구조
 
-정적 파일 빌드 후 serve + ngrok으로 공개 URL 제공.
-
-```bash
-npm run build     # dist/ 갱신
+```
+GitHub Pages                   회사 Mac (항상 켜둠)
+┌─────────────────────┐        ┌──────────────────────────┐
+│  프론트엔드 (React)  │  WSS   │  Node.js WebSocket 서버  │
+│  jieunpaak.github   │ ─────► │  localhost:3000          │
+│  .io/game           │        │  + cloudflared 터널      │
+└─────────────────────┘        └──────────────────────────┘
+  git push 시 자동 배포           항상 실행 중
 ```
 
-> 코드 수정 시 `npm run build`만 실행하면 즉시 반영됩니다.  
-> serve와 ngrok은 재시작 불필요.
+### 프론트엔드 — GitHub Pages
 
-### 서비스 관리 (launchd)
+`main` 브랜치에 푸시하면 GitHub Actions가 자동으로 빌드 후 배포합니다.
 
-로그인 시 자동 시작되는 두 개의 서비스가 등록되어 있습니다.
+```bash
+git push origin main   # 자동 배포 트리거
+```
 
-| 서비스 | 역할 |
-|--------|------|
-| `com.jerry.game-serve` | `dist/` 폴더를 포트 3000으로 서빙 |
-| `com.jerry.game-ngrok` | 포트 3000을 인터넷에 공개 (ngrok 터널) |
+배포 URL: **https://jieunpaak.github.io/game**
+
+### 백엔드 — 회사 Mac
+
+#### 서버 실행 (launchd 자동 시작)
+
+로그인 시 자동으로 Node.js 서버가 시작됩니다.
 
 ```bash
 # 상태 확인
 launchctl list | grep com.jerry.game
 
-# 재시작
+# 수동 재시작
 launchctl unload ~/Library/LaunchAgents/com.jerry.game-serve.plist
 launchctl load   ~/Library/LaunchAgents/com.jerry.game-serve.plist
-
-# 현재 공개 URL 확인
-curl -s http://localhost:4040/api/tunnels | python3 -c \
-  "import sys,json; print(json.load(sys.stdin)['tunnels'][0]['public_url'])"
 ```
 
-> ngrok 무료 플랜은 맥북 재시작 시 URL이 변경됩니다.
+#### cloudflared 터널
+
+프론트엔드(GitHub Pages)와 백엔드를 연결하는 터널입니다.
+
+```bash
+# 터널 시작
+cloudflared tunnel --url http://localhost:3000 --protocol http2
+```
+
+터미널에 출력된 URL을 `wss://`로 바꿔서 GitHub 시크릿에 등록합니다.
+
+```
+# GitHub 시크릿 등록 위치
+github.com/jieunpaak/game → Settings → Secrets → VITE_WS_URL
+
+# 등록 값 형식
+wss://xxxx.trycloudflare.com/ws/chat
+```
+
+시크릿 등록 후 `git push`로 재배포하면 새 URL이 적용됩니다.
+
+> **주의:** Mac 잠자기 모드 비활성화 필요
+> ```bash
+> sudo pmset -a sleep 0
+> sudo pmset -a disksleep 0
+> ```
+> 잠금화면은 무관합니다.
+
+### GitHub Actions 시크릿
+
+| 시크릿 | 설명 |
+|--------|------|
+| `VITE_WS_URL` | cloudflared 터널 WebSocket URL (`wss://...trycloudflare.com/ws/chat`) |
 
 ## 기술 스택
 
 - React 19 + TypeScript
 - Vite
 - HTML5 Canvas (렌더링, 물리, 게임 루프)
-- serve + ngrok (배포)
-- launchd (자동 실행)
+- Node.js + WebSocket (멀티플레이어 서버)
+- GitHub Pages (프론트엔드 호스팅)
+- cloudflared (WebSocket 터널)
+- launchd (서버 자동 실행)
