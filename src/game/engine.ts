@@ -165,8 +165,8 @@ export class GameEngine {
           hitTimer: m.hitTimer,
         })),
         cameraX: this.cameraX,
-        particles: this.particles.map(p => ({ ...p })),
-        damageNums: this.damageNums.map(d => ({ ...d })),
+        particles: [],       // 시각 효과만이라 전송 생략
+        damageNums: [],      // 시각 효과만이라 전송 생략
         canvasW: this.canvas.width,
         canvasH: this.canvas.height,
       });
