@@ -40,7 +40,7 @@ const server = http.createServer((req, res) => {
 
 const wss         = new WebSocketServer({ server, path: '/ws/chat' });
 const clients     = new Set();
-const clientNames = new Map(); // ws → username
+const clientInfo  = new Map(); // ws → { user, role }
 
 function broadcast(msg, exclude) {
   const str = typeof msg === 'string' ? msg : JSON.stringify(msg);
@@ -53,13 +53,15 @@ function sysMsg(text) {
   return {
     type: 'chat',
     payload: {
-      id:     Math.random().toString(36).slice(2),
-      user:   'SYSTEM',
-      text,
-      ts:     Date.now(),
-      system: true,
+      id: Math.random().toString(36).slice(2),
+      user: 'SYSTEM', text, ts: Date.now(), system: true,
     },
   };
+}
+
+function broadcastUserList() {
+  const list = [...clientInfo.values()];
+  broadcast({ type: 'user_list', payload: list });
 }
 
 wss.on('connection', ws => {
@@ -72,20 +74,25 @@ wss.on('connection', ws => {
 
     if (parsed.type === 'join') {
       const user = parsed.payload?.user ?? '알 수 없음';
-      clientNames.set(ws, user);
+      const role = parsed.payload?.role ?? 'guest';
+      clientInfo.set(ws, { user, role });
       broadcast(sysMsg(`${user}님이 입장했습니다 👋`));
+      broadcastUserList();
     } else if (parsed.type === 'game_state') {
-      broadcast(msg, ws); // 발신자 제외
+      broadcast(msg, ws);
     } else {
-      broadcast(msg);     // 채팅 등 전체
+      broadcast(msg);
     }
   });
 
   ws.on('close', () => {
     clients.delete(ws);
-    const user = clientNames.get(ws);
-    clientNames.delete(ws);
-    if (user) broadcast(sysMsg(`${user}님이 퇴장했습니다`));
+    const info = clientInfo.get(ws);
+    clientInfo.delete(ws);
+    if (info) {
+      broadcast(sysMsg(`${info.user}님이 퇴장했습니다`));
+      broadcastUserList();
+    }
   });
 });
 

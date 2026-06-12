@@ -4,6 +4,7 @@ import { SpectatorCanvas } from './components/SpectatorCanvas';
 import { HUD } from './components/HUD';
 import { Chat } from './components/Chat';
 import { Login, type Role } from './components/Login';
+import { UserList } from './components/UserList';
 import type { Player } from './game/entities';
 import { wsManager } from './game/wsManager';
 
@@ -30,10 +31,10 @@ function App() {
   useEffect(() => {
     if (!role || !username) return;
     const sendJoin = (s: string) => {
-      if (s === 'open') wsManager.send('join', { user: username });
+      if (s === 'open') wsManager.send('join', { user: username, role });
     };
     const unsub = wsManager.onConnState(sendJoin);
-    if (wsManager.connState === 'open') wsManager.send('join', { user: username });
+    if (wsManager.connState === 'open') wsManager.send('join', { user: username, role });
     return () => { unsub(); };
   }, [role, username]);
 
@@ -76,6 +77,7 @@ function App() {
         <button className="logout-btn" onClick={handleLogout} title="로그아웃">
           {username} ✕
         </button>
+        <UserList />
         <Chat username={username} />
       </div>
     </div>

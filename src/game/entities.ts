@@ -1,12 +1,12 @@
-import type { Platform, DamageNumber, Particle, PlayerState, MonsterState, GameStats } from './types';
-import { resolveVertical } from './physics';
 import type { InputState } from './input';
+import { resolveVertical } from './physics';
+import type { DamageNumber, GameStats, MonsterState, Particle, Platform, PlayerState } from './types';
 
-const GRAVITY    = 0.6;
+const GRAVITY = 0.6;
 const JUMP_FORCE = -14;
-const MOVE_SPEED = 7;
-const ATK_DURATION   = 16; // frames
-const ATK_COOLDOWN   = 24;
+const MOVE_SPEED = 4;
+const ATK_DURATION = 16; // frames
+const ATK_COOLDOWN = 24;
 const INVINCIBLE_DUR = 45;
 
 export class Player {
@@ -75,16 +75,16 @@ export class Player {
 
   update(input: InputState, platforms: Platform[]) {
     this.animFrame++;
-    if (this.atkCooldown > 0)       this.atkCooldown--;
-    if (this.atkTimer > 0)          this.atkTimer--;
-    if (this.invincible > 0)        this.invincible--;
-    if (this.hitFlash > 0)          this.hitFlash--;
+    if (this.atkCooldown > 0) this.atkCooldown--;
+    if (this.atkTimer > 0) this.atkTimer--;
+    if (this.invincible > 0) this.invincible--;
+    if (this.hitFlash > 0) this.hitFlash--;
     if (this.speechBubbleTimer > 0) this.speechBubbleTimer--;
 
     // Attack
     if (input.attackPressed && this.atkCooldown === 0) {
-      this.atkTimer          = ATK_DURATION;
-      this.atkCooldown       = ATK_COOLDOWN;
+      this.atkTimer = ATK_DURATION;
+      this.atkCooldown = ATK_COOLDOWN;
       this.speechBubbleTimer = 50;
       this.state = 'attack';
     }
@@ -93,7 +93,7 @@ export class Player {
 
     // Horizontal movement
     if (!this.isAttacking() || !this.onGround) {
-      if (input.left)  { this.vx = -MOVE_SPEED; this.facing = -1; }
+      if (input.left) { this.vx = -MOVE_SPEED; this.facing = -1; }
       else if (input.right) { this.vx = MOVE_SPEED; this.facing = 1; }
       else this.vx = 0;
     } else {
@@ -130,11 +130,11 @@ export interface MonsterDef {
 }
 
 export const MONSTER_DEFS: MonsterDef[] = [
-  { name: '슬라임',    emoji: '🟢', hp: 30,  atk: 5,  def: 0, gold: 3,  exp: 4,  speed: 1.0 },
-  { name: '버섯',      emoji: '🍄', hp: 50,  atk: 8,  def: 1, gold: 5,  exp: 7,  speed: 1.2 },
-  { name: '고블린',    emoji: '👺', hp: 70,  atk: 12, def: 2, gold: 8,  exp: 10, speed: 1.5 },
-  { name: '스켈레톤',  emoji: '💀', hp: 100, atk: 16, def: 3, gold: 12, exp: 15, speed: 1.3 },
-  { name: '오크',      emoji: '🧌', hp: 150, atk: 20, def: 5, gold: 18, exp: 22, speed: 1.0 },
+  { name: '슬라임', emoji: '🟢', hp: 30, atk: 5, def: 0, gold: 3, exp: 4, speed: 1.0 },
+  { name: '버섯', emoji: '🍄', hp: 50, atk: 8, def: 1, gold: 5, exp: 7, speed: 1.2 },
+  { name: '고블린', emoji: '👺', hp: 70, atk: 12, def: 2, gold: 8, exp: 10, speed: 1.5 },
+  { name: '스켈레톤', emoji: '💀', hp: 100, atk: 16, def: 3, gold: 12, exp: 15, speed: 1.3 },
+  { name: '오크', emoji: '🧌', hp: 150, atk: 20, def: 5, gold: 18, exp: 22, speed: 1.0 },
 ];
 
 const HIT_DURATION = 12;
@@ -198,7 +198,7 @@ export class Monster {
     // Patrol
     if (Math.abs(this.knockVx) < 0.5) {
       this.vx = this.facing * this.def.speed;
-      if (this.x <= this.patrolLeft)  { this.facing = 1;  this.x = this.patrolLeft; }
+      if (this.x <= this.patrolLeft) { this.facing = 1; this.x = this.patrolLeft; }
       if (this.x + this.w >= this.patrolRight) { this.facing = -1; this.x = this.patrolRight - this.w; }
     }
 
