@@ -21,10 +21,11 @@ export function Chat({ username }: Props) {
   const [unread,    setUnread]    = useState(0);
   const [connState, setConnState] = useState(wsManager.connState);
 
-  const sentIds  = useRef(new Set<string>());
-  const listRef  = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const openRef  = useRef(open);
+  const sentIds    = useRef(new Set<string>());
+  const listRef    = useRef<HTMLDivElement>(null);
+  const inputRef   = useRef<HTMLInputElement>(null);
+  const openRef    = useRef(open);
+  const composing  = useRef(false);
 
   useEffect(() => { openRef.current = open; }, [open]);
 
@@ -86,7 +87,9 @@ export function Chat({ username }: Props) {
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && sendMessage()}
+              onCompositionStart={() => { composing.current = true; }}
+              onCompositionEnd={() => { composing.current = false; }}
+              onKeyDown={e => { if (e.key === 'Enter' && !composing.current) sendMessage(); }}
               placeholder="메시지 입력..."
               maxLength={200}
             />
