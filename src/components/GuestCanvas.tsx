@@ -178,7 +178,7 @@ export function GuestCanvas({ username, onStatsChange, onLevelUp }: Props) {
         }
 
         onStatsChange({ ...player.stats });
-        render(ctx, canvas.width, canvas.height, player, localMonsters, platforms, damageNums, particles, cameraX, 'dungeon', []);
+        render(ctx, canvas.width, canvas.height, player, localMonsters, platforms, damageNums, particles, cameraX, 'dungeon', [], { nickname: username, level: player.stats.level });
       } else {
         // ── 멀티 모드 (방장 있음) ──
         onStatsChange({ ...player.stats });
@@ -210,6 +210,7 @@ export function GuestCanvas({ username, onStatsChange, onLevelUp }: Props) {
           cameraX,
           hostSnap.mapId ?? 'dungeon',
           [hostAsRemote, ...otherGuests],
+          { nickname: username, level: player.stats.level },
         );
       }
     };

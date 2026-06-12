@@ -35,6 +35,7 @@ export class GameEngine {
   private autoMode = false;
   private autoStuckTimer = 0;
   private autoLastX = 0;
+  private nickname = '';
 
   // 멀티플레이어: 원격 플레이어 (게스트) 상태
   private remotePlayers = new Map<string, RemotePlayerState>();
@@ -56,6 +57,7 @@ export class GameEngine {
   }
 
   setMap(id: MapId) { this.mapId = id; }
+  setNickname(name: string) { this.nickname = name; }
 
   toggleAuto(): boolean {
     this.autoMode = !this.autoMode;
@@ -264,6 +266,7 @@ export class GameEngine {
       this.cameraX,
       this.mapId,
       [...this.remotePlayers.values()],
+      this.nickname ? { nickname: this.nickname, level: this.player.stats.level } : undefined,
     );
   }
 

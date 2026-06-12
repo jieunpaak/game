@@ -26,6 +26,7 @@ export function render(
   cameraX: number,
   mapId: MapId = 'dungeon',
   otherPlayers: RemotePlayerState[] = [],
+  playerLabel?: { nickname: string; level: number },
 ) {
   ctx.clearRect(0, 0, cw, ch);
 
@@ -79,7 +80,7 @@ export function render(
   }
 
   // Player (내 캐릭터)
-  drawPlayer(ctx, player);
+  drawPlayer(ctx, player, playerLabel);
 
 
   // Particles
@@ -113,7 +114,7 @@ export function render(
   ctx.textAlign = 'left';
 }
 
-function drawPlayer(ctx: CanvasRenderingContext2D, p: PlayerRenderData) {
+function drawPlayer(ctx: CanvasRenderingContext2D, p: PlayerRenderData, label?: { nickname: string; level: number }) {
   // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath();
@@ -121,6 +122,21 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: PlayerRenderData) {
   ctx.fill();
 
   drawCharacter(ctx, p.x, p.y, p.facing, p.state, p.animFrame, p.hitFlash, p.speechBubbleTimer);
+
+  if (!label) return;
+  const text = `${label.nickname} Lv.${label.level}`;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  const tw = ctx.measureText(text).width;
+  const bx = p.x + p.w / 2 - tw / 2 - 5;
+  const by = p.y - 26;
+  ctx.fillStyle = 'rgba(20,80,40,0.8)';
+  ctx.beginPath();
+  ctx.roundRect(bx, by, tw + 10, 16, 4);
+  ctx.fill();
+  ctx.fillStyle = '#86efac';
+  ctx.fillText(text, p.x + p.w / 2, by + 12);
+  ctx.textAlign = 'left';
 }
 
 function drawOtherPlayer(ctx: CanvasRenderingContext2D, rp: RemotePlayerState) {

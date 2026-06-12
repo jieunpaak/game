@@ -8,11 +8,12 @@ import { wsManager } from '../game/wsManager';
 const SAVE_INTERVAL_MS = 10_000; // 10초마다 자동 저장
 
 interface Props {
+  username: string;
   onStatsChange: (stats: Player['stats']) => void;
   onLevelUp: () => void;
 }
 
-export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
+export function GameCanvas({ username, onStatsChange, onLevelUp }: Props) {
   const canvasRef    = useRef<HTMLCanvasElement>(null);
   const engineRef    = useRef<GameEngine | null>(null);
   const lastSaveRef  = useRef<number>(Date.now());
@@ -87,6 +88,7 @@ export function GameCanvas({ onStatsChange, onLevelUp }: Props) {
     };
 
     resize();
+    engine.setNickname(username);
     engine.start();
     engineRef.current = engine;
 

@@ -68,7 +68,7 @@ function App() {
     <div className="app">
       <div className="canvas-wrap">
         {role === 'host'
-          ? <GameCanvas onStatsChange={handleStatsChange} onLevelUp={handleLevelUp} />
+          ? <GameCanvas username={username} onStatsChange={handleStatsChange} onLevelUp={handleLevelUp} />
           : <GuestCanvas username={username} onStatsChange={handleStatsChange} onLevelUp={handleLevelUp} />
         }
         <HUD stats={stats} levelUpFlash={levelUpFlash} />
