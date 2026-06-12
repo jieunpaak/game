@@ -47,6 +47,7 @@ export function drawCharacter(
   state: PlayerState,
   animFrame: number,
   hitFlash: number,
+  speechBubbleTimer: number,
 ) {
   const source = getProcessedImage();
   if (!source) return;
@@ -58,14 +59,13 @@ export function drawCharacter(
   const cx = px + 18;
   const cy = py + 48 - DISPLAY / 2; // 이미지 바닥 = 히트박스 바닥
 
-  // ── 말풍선 ────────────────────────────────────────────────
-  if (state === 'attack') {
-    const p    = (t % 20) / 20;
-    const alpha = Math.max(0, 1 - p * 1.4);
-    const text  = '비켜 샤갈';
-    const bx    = cx + (facing === 1 ? 18 : -80);
-    const by    = cy - DISPLAY / 2 - 10;
-    const bw    = 74, bh = 28, br = 10;
+  // ── 말풍선 (공격 후 speechBubbleTimer 동안 유지) ──────────
+  if (speechBubbleTimer > 0) {
+    const alpha = Math.min(1, speechBubbleTimer / 15); // 마지막 15프레임 페이드아웃
+    const text = '비켜 샤갈';
+    const bx = cx + (facing === 1 ? 18 : -80);
+    const by = cy - DISPLAY / 2 - 10;
+    const bw = 74, bh = 28, br = 10;
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -84,7 +84,7 @@ export function drawCharacter(
     ctx.beginPath();
     ctx.moveTo(tailX - 6, by);
     ctx.lineTo(tailX + 6, by);
-    ctx.lineTo(tailX,     by + 10);
+    ctx.lineTo(tailX, by + 10);
     ctx.closePath();
     ctx.fillStyle = '#fff';
     ctx.fill();
@@ -92,7 +92,7 @@ export function drawCharacter(
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(tailX - 6, by);
-    ctx.lineTo(tailX,     by + 10);
+    ctx.lineTo(tailX, by + 10);
     ctx.lineTo(tailX + 6, by);
     ctx.stroke();
 

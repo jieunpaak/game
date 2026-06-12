@@ -92,7 +92,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: Player) {
   ctx.ellipse(p.x + p.w / 2, p.y + p.h + 2, p.w / 2, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  drawCharacter(ctx, p.x, p.y, p.facing, p.state, p.animFrame, p.hitFlash);
+  drawCharacter(ctx, p.x, p.y, p.facing, p.state, p.animFrame, p.hitFlash, p.speechBubbleTimer);
 }
 
 function drawMonster(ctx: CanvasRenderingContext2D, m: Monster) {

@@ -22,6 +22,7 @@ export class Player {
   invincible = 0;
   hitFlash = 0;
   animFrame = 0;
+  speechBubbleTimer = 0;
 
   stats: GameStats;
 
@@ -74,15 +75,17 @@ export class Player {
 
   update(input: InputState, platforms: Platform[]) {
     this.animFrame++;
-    if (this.atkCooldown > 0) this.atkCooldown--;
-    if (this.atkTimer > 0)    this.atkTimer--;
-    if (this.invincible > 0)  this.invincible--;
-    if (this.hitFlash > 0)    this.hitFlash--;
+    if (this.atkCooldown > 0)       this.atkCooldown--;
+    if (this.atkTimer > 0)          this.atkTimer--;
+    if (this.invincible > 0)        this.invincible--;
+    if (this.hitFlash > 0)          this.hitFlash--;
+    if (this.speechBubbleTimer > 0) this.speechBubbleTimer--;
 
     // Attack
     if (input.attackPressed && this.atkCooldown === 0) {
-      this.atkTimer    = ATK_DURATION;
-      this.atkCooldown = ATK_COOLDOWN;
+      this.atkTimer          = ATK_DURATION;
+      this.atkCooldown       = ATK_COOLDOWN;
+      this.speechBubbleTimer = 50;
       this.state = 'attack';
     }
 
