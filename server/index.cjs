@@ -3,7 +3,7 @@ const path = require('path');
 const fs   = require('fs');
 const { WebSocketServer } = require('ws');
 
-const PORT      = 3000;
+const PORT      = 5177;
 const DIST      = path.resolve(__dirname, '../dist');
 const SAVES_DIR = path.resolve(__dirname, '../data');
 const SAVES_FILE = path.join(SAVES_DIR, 'saves.json');
